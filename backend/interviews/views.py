@@ -3,6 +3,7 @@ from django.db import transaction
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
 
 import traceback
 
@@ -102,4 +103,55 @@ class StartInterviewView(APIView):
         return Response(
             serializer.data,
             status=status.HTTP_201_CREATED,
+        )
+
+class SubmitAnswerView(APIView):
+
+    def post(self, request, interview_id):
+
+        answer = request.data.get("answer")
+        question_number = request.data.get(
+            "question_number"
+        )
+
+        if not answer or not answer.strip():
+            return Response(
+                {"error": "Answer is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        interview = get_object_or_404(
+            Interview,
+            id=interview_id,
+            clerk_user_id=request.user.id,
+        )
+
+        question = get_object_or_404(
+            InterviewQuestion,
+            interview=interview,
+            question_number=question_number,
+        )
+
+        question.answer = answer.strip()
+        question.save(update_fields=["answer"])
+
+        interview.current_question = (
+            int(question_number) + 1
+        )
+
+        interview.status = "in_progress"
+        interview.save(
+            update_fields=[
+                "current_question",
+                "status",
+                "updated_at",
+            ]
+        )
+
+        return Response(
+            {
+                "message": "Answer saved successfully.",
+                "question_number": question_number,
+            },
+            status=status.HTTP_200_OK,
         )

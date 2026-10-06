@@ -42,3 +42,37 @@ export async function startInterview(
 
   return data as Interview;
 }
+
+export async function submitAnswer(
+  token: string,
+  interviewId: number,
+  questionNumber: number,
+  answer: string
+) {
+  const response = await fetch(
+    `${API_BASE_URL}/interviews/${interviewId}/answer/`,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+
+      body: JSON.stringify({
+        question_number: questionNumber,
+        answer,
+      }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Failed to save answer."
+    );
+  }
+
+  return data;
+}
