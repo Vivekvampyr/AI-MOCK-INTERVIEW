@@ -26,41 +26,42 @@ export default function Dashboard() {
     useState(false);
 
   const handleInterviewSetup = async (
-    setup: InterviewSetup
-  ) => {
-    try {
-      const token = await getToken();
+  setup: InterviewSetup
+    ) => {
+      try {
+        const token = await getToken();
 
-      if (!token) {
-        throw new Error(
-          "Authentication token unavailable."
+        if (!token) {
+          throw new Error(
+            "Authentication token unavailable."
+          );
+        }
+
+        const interview =
+          await startInterview(
+            token,
+            setup
+          );
+
+        setIsSetupOpen(false);
+
+        navigate(
+          "/interview/permission",
+          {
+            state: {
+              setup,
+              interview,
+            },
+          }
+        );
+
+      } catch (error) {
+        console.error(
+          "Failed to start interview:",
+          error
         );
       }
-
-      const interview =
-        await startInterview(
-          token,
-          setup
-        );
-
-      setIsSetupOpen(false);
-
-      navigate(
-        "/interview/permission",
-        {
-          state: {
-            setup,
-            interviewId: interview.id,
-          },
-        }
-      );
-    } catch (error) {
-      console.error(
-        "Failed to start interview:",
-        error
-      );
-    }
-  };
+    };
 
   return (
     <>

@@ -1,17 +1,24 @@
+from django.db import transaction
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Interview
+import traceback
+
+from .models import (
+    Interview,
+    InterviewQuestion,
+)
+
 from .serializers import InterviewSerializer
+
+from .services.question_generator import (
+    QuestionGenerator,
+)
 
 
 class StartInterviewView(APIView):
-
-    def post(self, request):
-        print("🔥 START INTERVIEW API HIT")
-        print("USER:", request.user)
-        print("DATA:", request.data)
 
     def post(self, request):
 
@@ -31,14 +38,16 @@ class StartInterviewView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if not isinstance(
-            tech_stack,
-            list
-        ) or not tech_stack:
-
+        if (
+            not isinstance(tech_stack, list)
+            or not tech_stack
+        ):
             return Response(
                 {
-                    "error": "At least one tech stack is required."
+                    "error": (
+                        "At least one tech stack "
+                        "is required."
+                    )
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -49,8 +58,42 @@ class StartInterviewView(APIView):
             tech_stack=tech_stack,
             total_questions=10,
             current_question=1,
-            status="created",
+            status="generating",
         )
+
+        try:
+            generator = QuestionGenerator()
+
+            result = generator.generate(
+                experience=experience,
+                tech_stack=tech_stack,
+            )
+
+            with transaction.atomic():
+
+                for item in result.questions:
+
+                    InterviewQuestion.objects.create(
+                        interview=interview,
+                        question_number=item.number,
+                        question=item.question,
+                    )
+
+                interview.status = "ready"
+                interview.save(
+                    update_fields=[
+                        "status",
+                        "updated_at",
+                    ]
+                )
+
+        except Exception as error:
+            print("\n========== GROK ERROR ==========")
+            print("ERROR:", repr(error))
+            traceback.print_exc()
+            print("================================\n")
+
+            interview.status = "failed"
 
         serializer = InterviewSerializer(
             interview

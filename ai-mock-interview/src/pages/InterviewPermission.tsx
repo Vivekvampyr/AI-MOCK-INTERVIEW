@@ -2,11 +2,15 @@ import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { useMedia } from "../context/MediaContext";
+import type {
+  Interview,
+} from "../types/api";
 
 import type { InterviewSetup } from "../types/interview";
 
 interface LocationState {
   setup?: InterviewSetup;
+  interview?: Interview;
 }
 
 export default function InterviewPermission() {
@@ -50,6 +54,7 @@ export default function InterviewPermission() {
     navigate("/interview", {
       state: {
         setup: state?.setup,
+        interview: state?.interview,
       },
     });
   };

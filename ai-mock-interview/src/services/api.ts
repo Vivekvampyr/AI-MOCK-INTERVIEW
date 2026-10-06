@@ -1,4 +1,10 @@
-import type { InterviewSetup } from "../types/interview";
+import type {
+  Interview,
+} from "../types/api";
+
+import type {
+  InterviewSetup,
+} from "../types/interview";
 
 const API_BASE_URL =
   "http://127.0.0.1:8000/api";
@@ -6,7 +12,8 @@ const API_BASE_URL =
 export async function startInterview(
   token: string,
   setup: InterviewSetup
-) {
+): Promise<Interview> {
+
   const response = await fetch(
     `${API_BASE_URL}/interviews/start/`,
     {
@@ -24,14 +31,14 @@ export async function startInterview(
     }
   );
 
-  if (!response.ok) {
-    const error = await response.json();
+  const data = await response.json();
 
+  if (!response.ok) {
     throw new Error(
-      error.error ||
+      data.error ||
         "Failed to start interview."
     );
   }
 
-  return response.json();
+  return data as Interview;
 }
