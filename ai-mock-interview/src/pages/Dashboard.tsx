@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useUser } from "@clerk/react";
+import { useAuth, useUser } from "@clerk/react";
 
 import InterviewSetupModal from "../components/InterviewSetupModal";
 
@@ -11,25 +11,56 @@ import {
   useNavigate,
 } from "react-router-dom";
 
+import {
+  startInterview,
+} from "../services/api";
+
 export default function Dashboard() {
   const { user } = useUser();
+
+  const { getToken } = useAuth();
 
   const navigate = useNavigate();
 
   const [isSetupOpen, setIsSetupOpen] =
     useState(false);
 
-  const handleInterviewSetup = (
+  const handleInterviewSetup = async (
     setup: InterviewSetup
-    ) => {
-        setIsSetupOpen(false);
+  ) => {
+    try {
+      const token = await getToken();
 
-        navigate("/interview/permission", {
-            state: {
+      if (!token) {
+        throw new Error(
+          "Authentication token unavailable."
+        );
+      }
+
+      const interview =
+        await startInterview(
+          token,
+          setup
+        );
+
+      setIsSetupOpen(false);
+
+      navigate(
+        "/interview/permission",
+        {
+          state: {
             setup,
-            },
-        });
-    };
+            interviewId: interview.id,
+          },
+        }
+      );
+    } catch (error) {
+      console.error(
+        "Failed to start interview:",
+        error
+      );
+    }
+  };
 
   return (
     <>

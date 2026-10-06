@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: mock_interview_postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: mock_interview
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+    ports:
+      - "5434:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
