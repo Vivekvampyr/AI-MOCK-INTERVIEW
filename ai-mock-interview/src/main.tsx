@@ -4,12 +4,17 @@ import { ClerkProvider } from "@clerk/react";
 import { BrowserRouter } from "react-router-dom";
 
 import App from "./App";
+import { MediaProvider } from "./context/MediaContext";
+
 import "./index.css";
 
-const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const publishableKey =
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!publishableKey) {
-  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY");
+  throw new Error(
+    "Missing VITE_CLERK_PUBLISHABLE_KEY"
+  );
 }
 
 ReactDOM.createRoot(
@@ -22,7 +27,9 @@ ReactDOM.createRoot(
       signUpFallbackRedirectUrl="/dashboard"
     >
       <BrowserRouter>
-        <App />
+        <MediaProvider>
+          <App />
+        </MediaProvider>
       </BrowserRouter>
     </ClerkProvider>
   </React.StrictMode>

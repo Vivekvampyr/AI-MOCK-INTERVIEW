@@ -7,22 +7,29 @@ import type {
   InterviewSetup,
 } from "../types/interview";
 
+import {
+  useNavigate,
+} from "react-router-dom";
+
 export default function Dashboard() {
   const { user } = useUser();
+
+  const navigate = useNavigate();
 
   const [isSetupOpen, setIsSetupOpen] =
     useState(false);
 
   const handleInterviewSetup = (
     setup: InterviewSetup
-  ) => {
-    console.log("Interview Setup:", setup);
+    ) => {
+        setIsSetupOpen(false);
 
-    setIsSetupOpen(false);
-
-    // Temporary until Phase 3.
-    // We'll navigate to the permission screen here.
-  };
+        navigate("/interview/permission", {
+            state: {
+            setup,
+            },
+        });
+    };
 
   return (
     <>
