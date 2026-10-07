@@ -100,3 +100,39 @@ export async function submitAnswer(
 
   return data;
 }
+
+export async function createWarningEvent(
+  token: string,
+  interviewId: number,
+  warningType: "lip_movement" | "eye_movement" | "smart_device",
+  questionNumber: number,
+  timestampSeconds: number,
+  confidence?: number
+) {
+  const response = await fetch(
+    `${API_BASE_URL}/interviews/${interviewId}/warning/`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        warning_type: warningType,
+        question_number: questionNumber,
+        timestamp_seconds: timestampSeconds,
+        confidence,
+      }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Failed to save warning event."
+    );
+  }
+
+  return data;
+}

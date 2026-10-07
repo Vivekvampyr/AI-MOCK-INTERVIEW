@@ -11,6 +11,7 @@ import traceback
 from .models import (
     Interview,
     InterviewQuestion,
+    WarningEvent
 )
 
 from .serializers import InterviewSerializer
@@ -277,4 +278,78 @@ class InterviewListView(APIView):
         return Response(
             serializer.data,
             status=status.HTTP_200_OK,
+        )
+
+class CreateWarningEventView(APIView):
+
+    def post(self, request, interview_id):
+
+        warning_type = request.data.get("warning_type")
+        question_number = request.data.get("question_number")
+        timestamp_seconds = request.data.get("timestamp_seconds")
+        confidence = request.data.get("confidence")
+
+        allowed_types = [
+            "lip_movement",
+            "eye_movement",
+            "smart_device",
+        ]
+
+        if warning_type not in allowed_types:
+            return Response(
+                {"error": "Invalid warning type."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if question_number is None:
+            return Response(
+                {"error": "Question number is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if timestamp_seconds is None:
+            return Response(
+                {"error": "Timestamp is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            question_number = int(question_number)
+            timestamp_seconds = float(timestamp_seconds)
+
+            if confidence is not None:
+                confidence = float(confidence)
+
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "Invalid warning event values."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        interview = get_object_or_404(
+            Interview,
+            id=interview_id,
+            clerk_user_id=request.user.id,
+        )
+
+        warning = WarningEvent.objects.create(
+            interview=interview,
+            question_number=question_number,
+            warning_type=warning_type,
+            timestamp_seconds=timestamp_seconds,
+            confidence=confidence,
+        )
+
+        return Response(
+            {
+                "message": "Warning event saved successfully.",
+                "warning": {
+                    "id": warning.id,
+                    "warning_type": warning.warning_type,
+                    "question_number": warning.question_number,
+                    "timestamp_seconds": warning.timestamp_seconds,
+                    "confidence": warning.confidence,
+                },
+            },
+            status=status.HTTP_201_CREATED,
         )

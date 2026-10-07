@@ -12,7 +12,8 @@ import {
 
 import { useMedia } from "../context/MediaContext";
 import type { Interview, InterviewQuestion } from "../types/api";
-import { submitAnswer } from "../services/api";
+import { createWarningEvent, submitAnswer } from "../services/api";
+import type {WarningEvent, WarningType} from "../types/interview";
 
 interface LocationState {
   interview?: Interview;
@@ -97,6 +98,44 @@ export default function InterviewPage() {
   const [answersMap, setAnswersMap] = useState<Record<number, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [warnings, setWarnings] = useState<WarningEvent[]>([]);
+
+  const recordWarning = async (
+  type: WarningType,
+  confidence?: number
+) => {
+  try {
+    const token = await getToken();
+
+    if (!token || !interview.id) {
+      return;
+    }
+
+    const result = await createWarningEvent(
+        token,
+        interview.id,
+        type,
+        currentQuestion.question_number,
+        elapsedSeconds,
+        confidence
+      );
+
+      if (result.warning) {
+        setWarnings((prev) => [
+          ...prev,
+          {
+            id: result.warning.id,
+            type: result.warning.warning_type as WarningType,
+            timestamp: result.warning.timestamp_seconds,
+            questionNumber: result.warning.question_number,
+            confidence: result.warning.confidence,
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error("Failed to save warning event:", error);
+    }
+  };
 
   // Timer: quiet elapsed counter
   useEffect(() => {
