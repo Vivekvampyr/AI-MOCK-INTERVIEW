@@ -16,6 +16,7 @@ import { createWarningEvent, submitAnswer } from "../services/api";
 import type {WarningEvent, WarningType} from "../types/interview";
 import { detectEyeMovement } from "../services/eyeMovementDetector";
 import { detectLipMovement } from "../services/lipMovementDetector";
+import { detectSmartDevice } from "../services/smartDeviceDetector";
 
 interface LocationState {
   interview?: Interview;
@@ -95,6 +96,9 @@ export default function InterviewPage() {
 
   const lipMovementCountRef = useRef(0);
   const lastLipWarningRef = useRef(0);
+
+  // const smartDeviceCountRef = useRef(0);
+  const lastSmartDeviceWarningRef = useRef(0);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -263,6 +267,71 @@ export default function InterviewPage() {
     return () => {
       isActive = false;
       cancelAnimationFrame(animationFrameId);
+    };
+  }, [stream, recordWarning]);
+
+  useEffect(() => {
+    if (!stream) return;
+
+    let isActive = true;
+    let isDetecting = false;
+    let lastDetectionTime = 0;
+
+    const detect = async () => {
+      if (!isActive) return;
+
+      const now = Date.now();
+
+      if (isDetecting || now - lastDetectionTime < 500) {
+        requestAnimationFrame(detect);
+        return;
+      }
+
+      const video = videoRef.current;
+
+      if (video) {
+        isDetecting = true;
+        lastDetectionTime = now;
+
+        try {
+          const confidence = await detectSmartDevice(video);
+
+          if (confidence !== null) {
+            console.log("PHONE DETECTED:", confidence);
+
+            const currentTime = Date.now();
+
+            const cooldownPassed =
+              currentTime - lastSmartDeviceWarningRef.current >= 10000;
+
+            if (cooldownPassed) {
+              console.log("TRIGGERING SMART DEVICE WARNING");
+
+              lastSmartDeviceWarningRef.current = currentTime;
+
+              await recordWarning(
+                "smart_device",
+                confidence
+              );
+            }
+          }
+        } catch (error) {
+          console.error(
+            "Smart device detection error:",
+            error
+          );
+        } finally {
+          isDetecting = false;
+        }
+      }
+
+      requestAnimationFrame(detect);
+    };
+
+    detect();
+
+    return () => {
+      isActive = false;
     };
   }, [stream, recordWarning]);
 
