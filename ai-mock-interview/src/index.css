@@ -1,12 +1,96 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: 'Source Serif 4', Georgia, Cambria, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Neutrals */
+  --color-canvas: #FAFAF8;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #F5F5F2;
+  --color-surface-muted: #EFEFEA;
+  
+  --color-border-subtle: #EBEBE6;
+  --color-border-base: #E5E5E0;
+  --color-border-strong: #D1D1CB;
+
+  --color-text-primary: #1A1A1A;
+  --color-text-muted: #6B6B6B;
+  --color-text-tertiary: #8C8C88;
+
+  /* Single Accent: Deep Teal */
+  --color-teal-accent: #0F5C5C;
+  --color-teal-hover: #0A4444;
+  --color-teal-subtle: #EBF5F5;
+  --color-teal-muted: #D3EAEA;
+  --color-teal-border: #99CDCD;
+
+  /* Semantics - desaturated */
+  --color-semantic-success: #1F5F3F;
+  --color-semantic-success-bg: #EBF6EF;
+  --color-semantic-success-border: #C8E5D3;
+
+  --color-semantic-warning: #855312;
+  --color-semantic-warning-bg: #FCF6E9;
+  --color-semantic-warning-border: #EEDBB2;
+
+  --color-semantic-danger: #962828;
+  --color-semantic-danger-bg: #FCF0F0;
+  --color-semantic-danger-border: #ECC5C5;
+}
+
+:root {
+  --canvas: #FAFAF8;
+  --surface: #FFFFFF;
+  --surface-subtle: #F5F5F2;
+  --border: #E5E5E0;
+  --border-strong: #D1D1CB;
+  --text-main: #1A1A1A;
+  --text-muted: #6B6B6B;
+  --accent: #0F5C5C;
+  --accent-hover: #0A4444;
+  --accent-subtle: #EBF5F5;
+}
+
 * {
   box-sizing: border-box;
 }
 
+html {
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  background-color: #FAFAF8;
+  color: #1A1A1A;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
   margin: 0;
-  font-family: Inter, system-ui, sans-serif;
-  background: #09090b;
-  color: #fafafa;
+  background-color: #FAFAF8;
+  color: #1A1A1A;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* Subtle single-level card shadow */
+.shadow-subtle {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+}
+
+.shadow-popover {
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+}
+
+/* Standard focus ring */
+:focus-visible {
+  outline: 2px solid #0F5C5C;
+  outline-offset: 2px;
+}
+
+/* Transitions: 150-200ms ease-out only */
+button, a, input, textarea, select {
+  transition-property: color, background-color, border-color, box-shadow, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
 }

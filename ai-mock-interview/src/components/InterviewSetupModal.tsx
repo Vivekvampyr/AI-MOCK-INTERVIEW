@@ -1,8 +1,6 @@
 import { useState } from "react";
-import type {
-  ExperienceLevel,
-  InterviewSetup,
-} from "../types/interview";
+import { X, Check } from "lucide-react";
+import type { ExperienceLevel, InterviewSetup } from "../types/interview";
 
 interface InterviewSetupModalProps {
   isOpen: boolean;
@@ -12,36 +10,41 @@ interface InterviewSetupModalProps {
 
 const experienceOptions: {
   label: string;
+  sub: string;
   value: ExperienceLevel;
 }[] = [
   {
     label: "Fresher",
+    sub: "0–1 yr",
     value: "fresher",
   },
   {
-    label: "1–2 Years",
+    label: "Early Career",
+    sub: "1–2 yrs",
     value: "1-2",
   },
   {
-    label: "3–5 Years",
+    label: "Mid-Level",
+    sub: "3–5 yrs",
     value: "3-5",
   },
   {
-    label: "5+ Years",
+    label: "Senior Staff",
+    sub: "5+ yrs",
     value: "5+",
   },
 ];
 
 const techStackOptions = [
   "React",
+  "TypeScript",
   "Django",
   "Python",
-  "Java",
-  "JavaScript",
   "Node.js",
   "FastAPI",
-  "MERN",
-  "SQL",
+  "System Design",
+  "SQL & Databases",
+  "Java",
 ];
 
 export default function InterviewSetupModal({
@@ -49,10 +52,8 @@ export default function InterviewSetupModal({
   onClose,
   onContinue,
 }: InterviewSetupModalProps) {
-  const [experience, setExperience] =
-    useState<ExperienceLevel>("fresher");
-
-  const [techStack, setTechStack] = useState<string[]>([]);
+  const [experience, setExperience] = useState<ExperienceLevel>("3-5");
+  const [techStack, setTechStack] = useState<string[]>(["React", "TypeScript"]);
 
   if (!isOpen) {
     return null;
@@ -79,65 +80,60 @@ export default function InterviewSetupModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="w-full max-w-2xl rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl">
+      <div className="w-full max-w-xl rounded-xl border border-[#E5E5E0] bg-white p-6 shadow-popover">
         {/* Header */}
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between border-b border-[#E5E5E0] pb-4">
           <div>
-            <p className="text-sm font-medium text-violet-400">
-              Interview Setup
-            </p>
-
-            <h2 className="mt-1 text-2xl font-bold">
-              Configure your mock interview
+            <span className="text-xs font-medium text-[#0F5C5C] uppercase tracking-wider">
+              Step 1 of 3
+            </span>
+            <h2 className="mt-1 text-lg font-semibold tracking-tight text-[#1A1A1A]">
+              Configure Mock Interview
             </h2>
-
-            <p className="mt-2 text-sm text-zinc-400">
-              Choose your experience level and the technologies
-              you want to be interviewed on.
+            <p className="mt-1 text-xs text-[#6B6B6B]">
+              Specify your seniority level and target tech stack to tailor the questions.
             </p>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg px-3 py-2 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+            className="rounded-md p-1.5 text-[#6B6B6B] hover:bg-[#F5F5F2] hover:text-[#1A1A1A]"
+            aria-label="Close dialog"
           >
-            ✕
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Experience */}
-        <div className="mt-8">
-          <label className="text-sm font-semibold text-zinc-200">
-            Years of Experience
+        {/* Experience Level */}
+        <div className="mt-5">
+          <label className="block text-xs font-semibold text-[#1A1A1A]">
+            Target Seniority Level
           </label>
-
-          <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="mt-2.5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
             {experienceOptions.map((option) => {
-              const selected =
-                experience === option.value;
+              const selected = experience === option.value;
 
               return (
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() =>
-                    setExperience(option.value)
-                  }
-                  className={`rounded-xl border px-4 py-4 text-sm font-medium transition ${
+                  onClick={() => setExperience(option.value)}
+                  className={`rounded-lg border p-3 text-left transition ${
                     selected
-                      ? "border-violet-500 bg-violet-500/10 text-violet-400"
-                      : "border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-zinc-700"
+                      ? "border-[#0F5C5C] bg-[#EBF5F5] text-[#0F5C5C]"
+                      : "border-[#E5E5E0] bg-[#FAFAF8] text-[#1A1A1A] hover:bg-[#F5F5F2]"
                   }`}
                 >
-                  {option.label}
+                  <p className="text-xs font-semibold">{option.label}</p>
+                  <p className="mt-0.5 text-[11px] text-[#6B6B6B]">{option.sub}</p>
                 </button>
               );
             })}
@@ -145,58 +141,59 @@ export default function InterviewSetupModal({
         </div>
 
         {/* Tech Stack */}
-        <div className="mt-8">
+        <div className="mt-6">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-semibold text-zinc-200">
-              Tech Stack
+            <label className="text-xs font-semibold text-[#1A1A1A]">
+              Focus Technologies
             </label>
-
-            <span className="text-xs text-zinc-500">
+            <span className="text-xs text-[#8C8C88]">
               {techStack.length} selected
             </span>
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
+          <div className="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {techStackOptions.map((tech) => {
-              const selected =
-                techStack.includes(tech);
+              const selected = techStack.includes(tech);
 
               return (
                 <button
                   key={tech}
                   type="button"
-                  onClick={() =>
-                    toggleTechStack(tech)
-                  }
-                  className={`rounded-xl border px-4 py-3 text-left text-sm font-medium transition ${
+                  onClick={() => toggleTechStack(tech)}
+                  className={`flex items-center justify-between rounded-lg border px-3 py-2 text-xs font-medium transition ${
                     selected
-                      ? "border-violet-500 bg-violet-500/10 text-violet-400"
-                      : "border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-zinc-700"
+                      ? "border-[#0F5C5C] bg-[#EBF5F5] text-[#0F5C5C]"
+                      : "border-[#E5E5E0] bg-[#FAFAF8] text-[#1A1A1A] hover:bg-[#F5F5F2]"
                   }`}
                 >
-                  <span className="mr-2">
-                    {selected ? "✓" : "○"}
-                  </span>
-
-                  {tech}
+                  <span>{tech}</span>
+                  <div
+                    className={`flex h-4 w-4 items-center justify-center rounded border ${
+                      selected
+                        ? "border-[#0F5C5C] bg-[#0F5C5C] text-white"
+                        : "border-[#D1D1CB] bg-white"
+                    }`}
+                  >
+                    {selected && <Check className="h-3 w-3 stroke-[2.5]" />}
+                  </div>
                 </button>
               );
             })}
           </div>
 
           {techStack.length === 0 && (
-            <p className="mt-3 text-xs text-amber-400">
-              Select at least one technology.
+            <p className="mt-2 text-xs text-[#855312]">
+              Select at least one technology to continue.
             </p>
           )}
         </div>
 
         {/* Footer */}
-        <div className="mt-8 flex justify-end gap-3">
+        <div className="mt-7 flex items-center justify-end gap-2.5 border-t border-[#E5E5E0] pt-4">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-zinc-800 px-5 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-900"
+            className="rounded-md border border-[#E5E5E0] bg-white px-3.5 py-2 text-xs font-medium text-[#1A1A1A] hover:bg-[#F5F5F2]"
           >
             Cancel
           </button>
@@ -205,9 +202,9 @@ export default function InterviewSetupModal({
             type="button"
             onClick={handleContinue}
             disabled={techStack.length === 0}
-            className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-500"
+            className="rounded-md bg-[#0F5C5C] px-4 py-2 text-xs font-medium text-white hover:bg-[#0A4444] disabled:bg-[#D1D1CB] disabled:text-[#8C8C88]"
           >
-            Continue
+            Proceed to Device Check
           </button>
         </div>
       </div>

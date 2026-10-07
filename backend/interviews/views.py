@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
+from .services.answer_evaluator import AnswerEvaluator
 
 import traceback
 
@@ -110,13 +111,25 @@ class SubmitAnswerView(APIView):
     def post(self, request, interview_id):
 
         answer = request.data.get("answer")
-        question_number = request.data.get(
-            "question_number"
-        )
+        question_number = request.data.get("question_number")
 
         if not answer or not answer.strip():
             return Response(
                 {"error": "Answer is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if question_number is None:
+            return Response(
+                {"error": "Question number is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            question_number = int(question_number)
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "Invalid question number."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -132,14 +145,95 @@ class SubmitAnswerView(APIView):
             question_number=question_number,
         )
 
-        question.answer = answer.strip()
-        question.save(update_fields=["answer"])
+        try:
+            evaluator = AnswerEvaluator()
 
-        interview.current_question = (
-            int(question_number) + 1
+            evaluation = evaluator.evaluate(
+                question=question.question,
+                answer=answer.strip(),
+                experience=interview.experience,
+                tech_stack=interview.tech_stack,
+            )
+
+        except Exception as error:
+            print("Answer evaluation failed:", repr(error))
+
+            return Response(
+                {
+                    "error": "Failed to evaluate answer. Please try again."
+                },
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        question.answer = answer.strip()
+        question.technical_score = evaluation.technical_score
+        question.communication_score = evaluation.communication_score
+        question.completeness_score = evaluation.completeness_score
+        question.overall_score = evaluation.overall_score
+        question.feedback = {
+            "strengths": evaluation.strengths,
+            "improvements": evaluation.improvements,
+        }
+
+        question.save(
+            update_fields=[
+                "answer",
+                "technical_score",
+                "communication_score",
+                "completeness_score",
+                "overall_score",
+                "feedback",
+            ]
         )
 
+        is_last_question = (
+            question_number == interview.total_questions
+        )
+
+        if is_last_question:
+
+            completed_questions = interview.questions.all()
+
+            scores = [
+                q.overall_score
+                for q in completed_questions
+                if q.overall_score is not None
+            ]
+
+            total_score = (
+                sum(scores) / len(scores)
+                if scores
+                else None
+            )
+
+            interview.current_question = interview.total_questions
+            interview.total_score = total_score
+            interview.status = "completed"
+
+            interview.save(
+                update_fields=[
+                    "current_question",
+                    "total_score",
+                    "status",
+                    "updated_at",
+                ]
+            )
+
+            serializer = InterviewSerializer(interview)
+
+            return Response(
+                {
+                    "message": "Interview completed successfully.",
+                    "question_number": question_number,
+                    "completed": True,
+                    "interview": serializer.data,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        interview.current_question = question_number + 1
         interview.status = "in_progress"
+
         interview.save(
             update_fields=[
                 "current_question",
@@ -150,8 +244,19 @@ class SubmitAnswerView(APIView):
 
         return Response(
             {
-                "message": "Answer saved successfully.",
+                "message": "Answer evaluated and saved successfully.",
                 "question_number": question_number,
+                "completed": False,
+                "evaluation": {
+                    "technical_score": evaluation.technical_score,
+                    "communication_score": evaluation.communication_score,
+                    "completeness_score": evaluation.completeness_score,
+                    "overall_score": evaluation.overall_score,
+                    "feedback": {
+                        "strengths": evaluation.strengths,
+                        "improvements": evaluation.improvements,
+                    },
+                },
             },
             status=status.HTTP_200_OK,
         )

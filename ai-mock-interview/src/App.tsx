@@ -16,6 +16,7 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import InterviewPermission from "./pages/InterviewPermission";
 import Interview from "./pages/Interview";
+import InterviewReport from "./pages/InterviewReport";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -46,12 +47,12 @@ export default function App() {
         />
 
         <Route
-          path="/sign-in"
+          path="/sign-in/*"
           element={<SignIn />}
         />
 
         <Route
-          path="/sign-up"
+          path="/sign-up/*"
           element={<SignUp />}
         />
 
@@ -78,6 +79,15 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Interview />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/interview/report"
+          element={
+            <ProtectedRoute>
+              <InterviewReport />
             </ProtectedRoute>
           }
         />

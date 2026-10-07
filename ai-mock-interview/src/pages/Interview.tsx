@@ -1,206 +1,413 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@clerk/react";
+import {
+  Clock,
+  Video,
+  CheckCircle2,
+  ChevronRight,
+  ArrowLeft,
+  Volume2,
+} from "lucide-react";
 
 import { useMedia } from "../context/MediaContext";
-
-import type { Interview } from "../types/api";
+import type { Interview, InterviewQuestion } from "../types/api";
+import { submitAnswer } from "../services/api";
 
 interface LocationState {
   interview?: Interview;
 }
 
-export default function Interview() {
+// Fallback questions for direct viewing/testing
+const fallbackInterview: Interview = {
+  id: 101,
+  experience: "3-5",
+  tech_stack: ["React", "TypeScript", "System Design"],
+  total_questions: 4,
+  current_question: 1,
+  total_score: null,
+  status: "in_progress",
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  questions: [
+    {
+      id: 1,
+      question_number: 1,
+      question:
+        "Explain how React 19's Server Actions and compiler handle component re-renders compared to traditional useMemo and useCallback optimizations.",
+      answer: "",
+      technical_score: null,
+      communication_score: null,
+      completeness_score: null,
+      overall_score: null,
+      feedback: {},
+    },
+    {
+      id: 2,
+      question_number: 2,
+      question:
+        "How would you architect client-side state management for an offline-first dashboard with optimistic UI updates and conflict resolution?",
+      answer: "",
+      technical_score: null,
+      communication_score: null,
+      completeness_score: null,
+      overall_score: null,
+      feedback: {},
+    },
+    {
+      id: 3,
+      question_number: 3,
+      question:
+        "Walk through a scenario where a memory leak occurred in a React single-page application. How did you identify, profile, and resolve it?",
+      answer: "",
+      technical_score: null,
+      communication_score: null,
+      completeness_score: null,
+      overall_score: null,
+      feedback: {},
+    },
+    {
+      id: 4,
+      question_number: 4,
+      question:
+        "What architectural trade-offs do you consider when choosing between client-side rendering, SSR with streaming, and static site generation?",
+      answer: "",
+      technical_score: null,
+      communication_score: null,
+      completeness_score: null,
+      overall_score: null,
+      feedback: {},
+    },
+  ],
+};
+
+export default function InterviewPage() {
   const location = useLocation();
   const navigate = useNavigate();
-
+  const { getToken } = useAuth();
   const { stream } = useMedia();
 
-  const videoRef =
-    useRef<HTMLVideoElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  const state =
-    location.state as LocationState | null;
+  const state = location.state as LocationState | null;
+  const interview = state?.interview || fallbackInterview;
 
-  const interview = state?.interview;
-
-  const [currentQuestionIndex, setCurrentQuestionIndex] =
-    useState(0);
-
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answer, setAnswer] = useState("");
+  const [answersMap, setAnswersMap] = useState<Record<number, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
+  // Timer: quiet elapsed counter
   useEffect(() => {
-    if (!interview || !stream) {
-      navigate("/dashboard", {
-        replace: true,
-      });
-    }
-  }, [interview, stream, navigate]);
+    const timer = setInterval(() => {
+      setElapsedSeconds((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
+  // Format time mm:ss
+  const formatTime = (totalSeconds: number) => {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  };
+
+  // Video feed hookup
   useEffect(() => {
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
     }
   }, [stream]);
 
-  if (!interview || !stream) {
-    return null;
-  }
+  // Speech Recognition setup (Voice input option)
 
-  const currentQuestion =
-    interview.questions[currentQuestionIndex];
+  const currentQuestion: InterviewQuestion =
+    interview.questions[currentQuestionIndex] || interview.questions[0];
 
-  const isLastQuestion =
-    currentQuestionIndex ===
-    interview.questions.length - 1;
+  const totalQuestions = interview.questions.length;
+  const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
 
-  const handleSubmit = () => {
-    if (!answer.trim()) {
-      return;
+  // Keyboard shortcut Ctrl/Cmd + Enter to submit
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      if (answer.trim() && !isSubmitting) {
+        handleSubmit();
+      }
     }
-
-    if (isLastQuestion) {
-      console.log("Interview completed");
-
-      return;
-    }
-
-    setCurrentQuestionIndex(
-      (current) => current + 1
-    );
-
-    setAnswer("");
   };
 
+  const handleSubmit = async () => {
+    if (!answer.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    const trimmedAnswer = answer.trim();
+
+    try {
+      const token = await getToken();
+
+      if (!token) {
+        throw new Error("Authentication token unavailable.");
+      }
+
+      if (!interview.id) {
+        throw new Error("Interview ID is missing.");
+      }
+
+      const result = await submitAnswer(
+        token,
+        interview.id,
+        currentQuestion.question_number,
+        trimmedAnswer
+      );
+
+      const updatedAnswers = {
+        ...answersMap,
+        [currentQuestion.question_number]: trimmedAnswer,
+      };
+
+      setAnswersMap(updatedAnswers);
+
+      if (isLastQuestion) {
+        if (!result.interview) {
+          throw new Error("Completed interview data was not returned.");
+        }
+
+        navigate("/interview/report", {
+          state: {
+            interview: result.interview,
+            totalDuration: elapsedSeconds,
+          },
+        });
+
+        return;
+      }
+
+      setCurrentQuestionIndex((prev) => prev + 1);
+      setAnswer("");
+    } catch (error) {
+      console.error("Failed to save answer:", error);
+
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to save your answer. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const wordCount = answer.trim() ? answer.trim().split(/\s+/).length : 0;
+
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-zinc-950 p-6">
-      <div className="mx-auto max-w-7xl">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-violet-400">
-              AI Mock Interview
-            </p>
-
-            <h1 className="mt-1 text-2xl font-bold">
-              Technical Interview
-            </h1>
+    <div className="min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8] text-[#1A1A1A]">
+      {/* Distraction-free top utility bar */}
+      <header className="border-b border-[#E5E5E0] bg-white px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-6xl items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm("Leave this interview session? Your progress will be discarded.")) {
+                  navigate("/dashboard");
+                }
+              }}
+              className="flex items-center gap-1.5 text-xs font-medium text-[#6B6B6B] hover:text-[#1A1A1A]"
+              aria-label="Exit interview"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Exit session</span>
+            </button>
+            <span className="text-[#E5E5E0]">|</span>
+            <span className="text-xs font-medium text-[#6B6B6B]">
+              {interview.tech_stack.join(", ")} · {interview.experience} yrs
+            </span>
           </div>
 
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm">
-            Question{" "}
-            <span className="font-semibold text-violet-400">
-              {currentQuestionIndex + 1}
-            </span>{" "}
-            / {interview.questions.length}
-          </div>
-        </div>
-
-        {/* Main content */}
-        <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-          {/* Camera */}
-          <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900">
-            <div className="aspect-video bg-black">
-              <video
-                ref={videoRef}
-                autoPlay
-                muted
-                playsInline
-                className="h-full w-full object-cover"
-              />
+          {/* Quiet Timer & Progress */}
+          <div className="flex items-center gap-5">
+            <div className="flex items-center gap-1.5 text-xs font-mono font-medium text-[#6B6B6B]">
+              <Clock className="h-3.5 w-3.5 text-[#8C8C88]" />
+              <span>{formatTime(elapsedSeconds)}</span>
             </div>
 
-            <div className="flex items-center justify-between border-t border-zinc-800 px-5 py-4">
-              <div>
-                <p className="text-sm font-medium">
-                  Camera
-                </p>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-[#1A1A1A]">
+                Question {currentQuestionIndex + 1} of {totalQuestions}
+              </span>
+              <div className="h-1.5 w-20 overflow-hidden rounded-full bg-[#E5E5E0]">
+                <div
+                  className="h-full bg-[#0F5C5C] transition-all duration-200"
+                  style={{
+                    width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
 
-                <p className="text-xs text-zinc-500">
-                  Interview recording active
-                </p>
+      {/* Main Workspace */}
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
+          {/* Left Column: Quiet Camera & Audio Monitor */}
+          <aside className="space-y-4">
+            <div className="overflow-hidden rounded-xl border border-[#E5E5E0] bg-white shadow-subtle">
+              <div className="relative aspect-video w-full bg-[#1A1A1A]">
+                {stream ? (
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    muted
+                    playsInline
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full flex-col items-center justify-center text-center p-4">
+                    <Video className="h-7 w-7 text-[#8C8C88]" />
+                    <p className="mt-2 text-xs text-[#8C8C88]">
+                      Camera stream standby
+                    </p>
+                  </div>
+                )}
+
+                {/* Subtle, non-neon live badge */}
+                <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 rounded-md bg-white/95 px-2 py-1 text-[11px] font-medium text-[#1A1A1A] border border-[#E5E5E0]">
+                  <span className="h-2 w-2 rounded-full bg-[#1F5F3F]" />
+                  <span>Recording Active</span>
+                </div>
               </div>
 
-              <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
-                Live
-              </span>
+              <div className="border-t border-[#E5E5E0] px-3.5 py-3 text-xs text-[#6B6B6B]">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 font-medium text-[#1A1A1A]">
+                    <Volume2 className="h-3.5 w-3.5 text-[#0F5C5C]" />
+                    Microphone Input
+                  </span>
+                  <span className="rounded bg-[#EBF6EF] px-1.5 py-0.5 text-[11px] font-medium text-[#1F5F3F]">
+                    Connected
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] leading-relaxed text-[#8C8C88]">
+                  Keep your focus forward and structure your responses clearly.
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Question + Answer */}
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
-            <p className="text-sm text-zinc-500">
-              Question {currentQuestionIndex + 1}
-            </p>
+            {/* Quiet Tips / Checklist */}
+            <div className="rounded-xl border border-[#E5E5E0] bg-white p-4 text-xs text-[#6B6B6B]">
+              <h3 className="font-medium text-[#1A1A1A]">Response Guidelines</h3>
+              <ul className="mt-2.5 space-y-2 text-[#6B6B6B]">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0F5C5C] font-semibold">1.</span>
+                  <span>State your direct answer or recommendation first.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0F5C5C] font-semibold">2.</span>
+                  <span>Reference concrete technical trade-offs and edge cases.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0F5C5C] font-semibold">3.</span>
+                  <span>Mention production experience and architectural rationale.</span>
+                </li>
+              </ul>
+            </div>
+          </aside>
 
-            <h2 className="mt-3 text-2xl font-semibold leading-relaxed">
-              {currentQuestion.question}
-            </h2>
+          {/* Right Column: Question & Answer Workspace */}
+          <section className="flex flex-col rounded-xl border border-[#E5E5E0] bg-white p-6 shadow-subtle sm:p-8">
+            {/* Question Header */}
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-[#0F5C5C]">
+                  Question {currentQuestionIndex + 1}
+                </span>
+                <span className="text-xs text-[#8C8C88]">
+                  Technical Depth & Implementation
+                </span>
+              </div>
 
-            <div className="mt-8">
-              <label
-                htmlFor="answer"
-                className="text-sm font-medium text-zinc-300"
-              >
-                Your Answer
-              </label>
+              <h1 className="mt-2 text-xl sm:text-2xl font-semibold leading-snug tracking-tight text-[#1A1A1A]">
+                {currentQuestion.question}
+              </h1>
+            </div>
+
+            {/* Answer Input Area */}
+            <div className="mt-6 flex-1 flex flex-col">
+              <div className="flex items-center justify-between pb-2">
+                <label
+                  htmlFor="interview-answer"
+                  className="text-xs font-medium text-[#1A1A1A]"
+                >
+                  Your Answer
+                </label>
+
+                <div className="flex items-center gap-3">
+
+                  <span className="text-xs text-[#8C8C88]">
+                    {wordCount} {wordCount === 1 ? "word" : "words"}
+                  </span>
+                </div>
+              </div>
 
               <textarea
-                id="answer"
+                id="interview-answer"
+                rows={9}
                 value={answer}
-                onChange={(event) =>
-                  setAnswer(event.target.value)
-                }
-                placeholder="Type your answer here..."
-                className="mt-3 min-h-56 w-full resize-none rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-violet-500"
+                onChange={(e) => setAnswer(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type your structured response here, detailing implementation details, architectural choices, and why you made them..."
+                className="w-full flex-1 rounded-lg border border-[#E5E5E0] bg-[#FAFAF8] p-4 text-sm leading-relaxed text-[#1A1A1A] placeholder:text-[#8C8C88] focus:border-[#0F5C5C] focus:bg-white focus:outline-none"
               />
+
+              <div className="mt-3 flex items-center justify-between text-xs text-[#8C8C88]">
+                <span>
+                  Shortcut: <kbd className="rounded border border-[#E5E5E0] bg-[#F5F5F2] px-1.5 py-0.5 text-[11px] font-mono text-[#1A1A1A]">Ctrl</kbd> + <kbd className="rounded border border-[#E5E5E0] bg-[#F5F5F2] px-1.5 py-0.5 text-[11px] font-mono text-[#1A1A1A]">Enter</kbd> to submit
+                </span>
+              </div>
             </div>
 
-            <div className="mt-4 flex items-center justify-between">
-              <p className="text-xs text-zinc-500">
-                Take your time and provide a clear answer.
-              </p>
-
+            {/* Submission Footer */}
+            <div className="mt-8 flex items-center justify-between border-t border-[#E5E5E0] pt-5">
               <button
                 type="button"
-                onClick={handleSubmit}
-                disabled={!answer.trim()}
-                className="rounded-xl bg-violet-600 px-6 py-3 text-sm font-medium text-white hover:bg-violet-500 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
+                onClick={() => setAnswer("")}
+                disabled={!answer}
+                className="text-xs font-medium text-[#6B6B6B] hover:text-[#1A1A1A] disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                {isLastQuestion
-                  ? "Finish Interview"
-                  : "Submit Answer"}
+                Clear text
               </button>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={!answer.trim() || isSubmitting}
+                  className="inline-flex items-center gap-2 rounded-md bg-[#0F5C5C] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#0A4444] disabled:cursor-not-allowed disabled:bg-[#D1D1CB] disabled:text-[#8C8C88]"
+                >
+                  {isSubmitting ? (
+                    "Saving response..."
+                  ) : isLastQuestion ? (
+                    <>
+                      <span>Complete & Review Report</span>
+                      <CheckCircle2 className="h-4 w-4" />
+                    </>
+                  ) : (
+                    <>
+                      <span>Submit & Next Question</span>
+                      <ChevronRight className="h-4 w-4" />
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
+          </section>
         </div>
-
-        {/* Progress */}
-        <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-zinc-400">
-              Interview Progress
-            </span>
-
-            <span className="text-zinc-500">
-              {currentQuestionIndex + 1} /{" "}
-              {interview.questions.length}
-            </span>
-          </div>
-
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-800">
-            <div
-              className="h-full rounded-full bg-violet-600 transition-all"
-              style={{
-                width: `${
-                  ((currentQuestionIndex + 1) /
-                    interview.questions.length) *
-                  100
-                }%`,
-              }}
-            />
-          </div>
-        </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }
