@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/react";
 import {
@@ -14,6 +14,7 @@ import { useMedia } from "../context/MediaContext";
 import type { Interview, InterviewQuestion } from "../types/api";
 import { createWarningEvent, submitAnswer } from "../services/api";
 import type {WarningEvent, WarningType} from "../types/interview";
+import { detectEyeMovement } from "../services/eyeMovementDetector";
 
 interface LocationState {
   interview?: Interview;
@@ -88,6 +89,9 @@ export default function InterviewPage() {
   const { getToken } = useAuth();
   const { stream } = useMedia();
 
+  const eyeMovementCountRef = useRef(0);
+  const lastEyeWarningRef = useRef(0);
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const state = location.state as LocationState | null;
@@ -99,43 +103,110 @@ export default function InterviewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [warnings, setWarnings] = useState<WarningEvent[]>([]);
+  const currentQuestion: InterviewQuestion =
+    interview.questions[currentQuestionIndex] || interview.questions[0];
 
-  const recordWarning = async (
-  type: WarningType,
-  confidence?: number
-) => {
-  try {
-    const token = await getToken();
+  const recordWarning = useCallback(
+    async (
+      type: WarningType,
+      confidence?: number
+    ) => {
+      try {
+        const token = await getToken();
 
-    if (!token || !interview.id) {
-      return;
-    }
+        if (!token || !interview.id) {
+          return;
+        }
 
-    const result = await createWarningEvent(
-        token,
-        interview.id,
-        type,
-        currentQuestion.question_number,
-        elapsedSeconds,
-        confidence
-      );
+        const result = await createWarningEvent(
+          token,
+          interview.id,
+          type,
+          currentQuestion.question_number,
+          elapsedSeconds,
+          confidence
+        );
 
-      if (result.warning) {
-        setWarnings((prev) => [
-          ...prev,
-          {
-            id: result.warning.id,
-            type: result.warning.warning_type as WarningType,
-            timestamp: result.warning.timestamp_seconds,
-            questionNumber: result.warning.question_number,
-            confidence: result.warning.confidence,
-          },
-        ]);
+        if (result.warning) {
+          setWarnings((prev) => [
+            ...prev,
+            {
+              id: result.warning.id,
+              type: result.warning.warning_type as WarningType,
+              timestamp: result.warning.timestamp_seconds,
+              questionNumber: result.warning.question_number,
+              confidence: result.warning.confidence,
+            },
+          ]);
+        }
+      } catch (error) {
+        console.error(
+          "Failed to save warning event:",
+          error
+        );
       }
-    } catch (error) {
-      console.error("Failed to save warning event:", error);
-    }
-  };
+    },
+    [
+      getToken,
+      interview.id,
+      currentQuestion.question_number,
+      elapsedSeconds,
+    ]
+  );
+
+  useEffect(() => {
+    if (!stream) return;
+
+    let animationFrameId = 0;
+    let isActive = true;
+
+    const detect = async () => {
+      if (!isActive) return;
+
+      const video = videoRef.current;
+
+      if (video) {
+        try {
+          const moved = await detectEyeMovement(video);
+
+          if (moved) {
+            eyeMovementCountRef.current += 1;
+          } else {
+            eyeMovementCountRef.current = 0;
+          }
+
+          const now = Date.now();
+
+          const sustainedMovement =
+            eyeMovementCountRef.current >= 3;
+
+          const cooldownPassed =
+            now - lastEyeWarningRef.current >= 10000;
+
+          if (sustainedMovement && cooldownPassed) {
+            lastEyeWarningRef.current = now;
+            eyeMovementCountRef.current = 0;
+
+            await recordWarning("eye_movement");
+          }
+        } catch (error) {
+          console.error(
+            "Eye movement detection error:",
+            error
+          );
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(detect);
+    };
+
+    detect();
+
+    return () => {
+      isActive = false;
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [stream, recordWarning]);
 
   // Timer: quiet elapsed counter
   useEffect(() => {
@@ -160,9 +231,6 @@ export default function InterviewPage() {
   }, [stream]);
 
   // Speech Recognition setup (Voice input option)
-
-  const currentQuestion: InterviewQuestion =
-    interview.questions[currentQuestionIndex] || interview.questions[0];
 
   const totalQuestions = interview.questions.length;
   const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
@@ -305,11 +373,32 @@ export default function InterviewPage() {
                     playsInline
                     className="h-full w-full object-cover"
                   />
+                  
                 ) : (
                   <div className="flex h-full flex-col items-center justify-center text-center p-4">
                     <Video className="h-7 w-7 text-[#8C8C88]" />
                     <p className="mt-2 text-xs text-[#8C8C88]">
                       Camera stream standby
+                    </p>
+                  </div>
+                )}
+
+                {warnings.length > 0 && (
+                  <div className="mt-3 rounded-lg border border-[#E8C8C8] bg-[#FFF7F7] px-3 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-[#962828] animate-pulse" />
+
+                      <span className="text-xs font-medium text-[#962828]">
+                        Warning detected
+                      </span>
+                    </div>
+
+                    <p className="mt-1 text-[11px] text-[#6B6B6B]">
+                      {warnings[warnings.length - 1].type === "eye_movement"
+                        ? "Please keep your eyes focused on the interview screen."
+                        : warnings[warnings.length - 1].type === "lip_movement"
+                        ? "Unusual lip movement detected."
+                        : "Smart device detected."}
                     </p>
                   </div>
                 )}
