@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/react";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -12,7 +12,8 @@ import {
 
 import InterviewSetupModal from "../components/InterviewSetupModal";
 import type { InterviewSetup } from "../types/interview";
-import { startInterview } from "../services/api";
+import { getInterviews, startInterview } from "../services/api";
+import type { Interview } from "../types/api";
 
 interface SessionRecord {
   id: number;
@@ -23,57 +24,14 @@ interface SessionRecord {
   duration: string;
   score: number;
   status: "completed" | "in_progress";
+  interview: Interview;
 }
 
-const pastSessions: SessionRecord[] = [
-  {
-    id: 101,
-    role: "Senior Full Stack Engineer",
-    techStack: ["React", "TypeScript", "Django"],
-    seniority: "3-5 yrs",
-    date: "Oct 6, 2026",
-    duration: "18m",
-    score: 85,
-    status: "completed",
-  },
-  {
-    id: 102,
-    role: "Frontend Systems Engineer",
-    techStack: ["React", "TypeScript"],
-    seniority: "3-5 yrs",
-    date: "Sep 29, 2026",
-    duration: "21m",
-    score: 81,
-    status: "completed",
-  },
-  {
-    id: 103,
-    role: "Backend Engineer",
-    techStack: ["Django", "Python", "SQL"],
-    seniority: "1-2 yrs",
-    date: "Sep 22, 2026",
-    duration: "16m",
-    score: 78,
-    status: "completed",
-  },
-  {
-    id: 104,
-    role: "Full Stack Foundations",
-    techStack: ["React", "Node.js"],
-    seniority: "Fresher",
-    date: "Sep 15, 2026",
-    duration: "15m",
-    score: 74,
-    status: "completed",
-  },
-];
 
 export default function Dashboard() {
   const { user } = useUser();
   const { getToken } = useAuth();
   const navigate = useNavigate();
-
-  const [isSetupOpen, setIsSetupOpen] = useState(false);
 
   const handleInterviewSetup = async (setup: InterviewSetup) => {
     try {
@@ -98,7 +56,52 @@ export default function Dashboard() {
     }
   };
 
-  const sessions = pastSessions;
+  const [isSetupOpen, setIsSetupOpen] = useState(false);
+  const [sessions, setSessions] = useState<SessionRecord[]>([]);
+
+  useEffect(() => {
+    const loadInterviews = async () => {
+      try {
+        const token = await getToken();
+
+        if (!token) {
+          throw new Error("Authentication token unavailable.");
+        }
+
+        const interviews = await getInterviews(token);
+
+        const sessionRecords: SessionRecord[] = interviews.map(
+          (interview) => ({
+            id: interview.id,
+            role: "Technical Interview",
+            techStack: interview.tech_stack,
+            seniority: `${interview.experience} yrs`,
+            date: new Date(interview.created_at).toLocaleDateString(
+              "en-IN",
+              {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              }
+            ),
+            duration: "—",
+            score: interview.total_score ?? 0,
+            status:
+              interview.status === "completed"
+                ? "completed"
+                : "in_progress",
+            interview,
+          })
+        );
+
+        setSessions(sessionRecords);
+      } catch (error) {
+        console.error("Failed to load interview history:", error);
+      }
+    };
+
+    loadInterviews();
+  }, [getToken]);
 
   const avgScore =
     sessions.length > 0
@@ -516,17 +519,7 @@ export default function Dashboard() {
                         <Link
                           to="/interview/report"
                           state={{
-                            interview: {
-                              id: session.id,
-                              experience: session.seniority,
-                              tech_stack: session.techStack,
-                              total_questions: 4,
-                              current_question: 4,
-                              total_score: session.score,
-                              status: "completed",
-                              created_at: session.date,
-                              updated_at: session.date,
-                            },
+                            interview: session.interview,
                           }}
                           className="inline-flex items-center gap-1 font-medium text-[#0F5C5C] hover:text-[#0A4444]"
                         >

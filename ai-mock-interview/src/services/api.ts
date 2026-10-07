@@ -43,6 +43,30 @@ export async function startInterview(
   return data as Interview;
 }
 
+export async function getInterviews(
+  token: string
+): Promise<Interview[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/interviews/`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Failed to fetch interviews."
+    );
+  }
+
+  return data as Interview[];
+}
+
 export async function submitAnswer(
   token: string,
   interviewId: number,

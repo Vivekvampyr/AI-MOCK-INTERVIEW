@@ -17,110 +17,19 @@ interface LocationState {
 }
 
 // Representative sample report data for demonstration/fallback
-const sampleReportData: Interview = {
-  id: 101,
-  experience: "3-5",
-  tech_stack: ["React", "TypeScript", "Django"],
-  total_questions: 4,
-  current_question: 4,
-  total_score: 83,
-  status: "completed",
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  questions: [
-    {
-      id: 1,
-      question_number: 1,
-      question:
-        "Explain how React 19's Server Actions and compiler handle component re-renders compared to traditional useMemo and useCallback optimizations.",
-      answer:
-        "React 19's compiler automatically analyzes dependencies at build-time to memoize values and components without manual useMemo or useCallback hooks. Server Actions execute asynchronously on the server and update the client state through streaming transitions without full tree remounts.",
-      technical_score: 88,
-      communication_score: 85,
-      completeness_score: 82,
-      overall_score: 85,
-      feedback: {
-        strengths: [
-          "Accurately differentiated compile-time auto-memoization from manual hook dependencies.",
-          "Clear explanation of server action transitions without full client re-rendering.",
-        ],
-        improvements: [
-          "Could mention how the compiler handles bailout conditions or mutable references.",
-        ],
-      },
-    },
-    {
-      id: 2,
-      question_number: 2,
-      question:
-        "How would you architect client-side state management for an offline-first dashboard with optimistic UI updates and conflict resolution?",
-      answer:
-        "I would use an IndexedDB persistence layer backed by an in-memory store like TanStack Query. Every user mutation updates the local cache immediately with an optimistic ID, pushes an event to an outgoing mutation queue, and syncs via a versioned timestamp vector when online.",
-      technical_score: 86,
-      communication_score: 84,
-      completeness_score: 80,
-      overall_score: 83,
-      feedback: {
-        strengths: [
-          "Recommended IndexedDB for persistent storage over naive localStorage.",
-          "Solid outline of optimistic ID generation and rollback queues.",
-        ],
-        improvements: [
-          "Expand on conflict resolution algorithms (e.g. Last-Write-Wins vs CRDTs for collaborative views).",
-        ],
-      },
-    },
-    {
-      id: 3,
-      question_number: 3,
-      question:
-        "Walk through a scenario where a memory leak occurred in a React single-page application. How did you identify, profile, and resolve it?",
-      answer:
-        "We noticed detached DOM nodes and creeping memory in long-running dashboards. Using Chrome DevTools Memory Heap snapshots taken 10 minutes apart, we traced the leak to an uncleaned WebSocket event listener inside a custom hook that retained closures over large data tables.",
-      technical_score: 84,
-      communication_score: 80,
-      completeness_score: 82,
-      overall_score: 82,
-      feedback: {
-        strengths: [
-          "Specified practical use of heap snapshots comparison to identify detached nodes.",
-          "Correctly identified event listener cleanup as the primary culprit.",
-        ],
-        improvements: [
-          "Mention automated regression testing or linter rules to guard against missing effect cleanups in CI.",
-        ],
-      },
-    },
-    {
-      id: 4,
-      question_number: 4,
-      question:
-        "What architectural trade-offs do you consider when choosing between client-side rendering, SSR with streaming, and static site generation?",
-      answer:
-        "SSG offers maximum edge cacheability and lowest server cost, ideal for public marketing and docs. CSR provides fluid desktop-like interactions but suffers on initial TTFB and SEO. SSR with streaming combines fast TTFB with progressive hydration for personalized dynamic dashboards.",
-      technical_score: 82,
-      communication_score: 85,
-      completeness_score: 79,
-      overall_score: 82,
-      feedback: {
-        strengths: [
-          "Succinctly categorized workloads based on caching vs personalization requirements.",
-          "Distinguished progressive streaming hydration from traditional monolithic SSR.",
-        ],
-        improvements: [
-          "Discuss caching invalidation strategies (e.g. stale-while-revalidate / ISR) under high traffic spikes.",
-        ],
-      },
-    },
-  ],
-};
+
 
 export default function InterviewReport() {
   const location = useLocation();
   const navigate = useNavigate();
 
   const state = location.state as LocationState | null;
-  const interview = state?.interview || sampleReportData;
+  const interview = state?.interview;
+
+  if (!interview) {
+    navigate("/dashboard");
+    return null;
+  }
 
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(1);
 
@@ -135,23 +44,26 @@ export default function InterviewReport() {
   // Compute aggregate scores
   const technicalAvg = Math.round(
     interview.questions.reduce(
-      (acc, q) => acc + (q.technical_score || 84),
+      (acc, q) => acc + (q.technical_score ?? 0),
       0
     ) / interview.questions.length
   );
+
   const communicationAvg = Math.round(
     interview.questions.reduce(
-      (acc, q) => acc + (q.communication_score || 82),
+      (acc, q) => acc + (q.communication_score ?? 0),
       0
     ) / interview.questions.length
   );
+
   const completenessAvg = Math.round(
     interview.questions.reduce(
-      (acc, q) => acc + (q.completeness_score || 80),
+      (acc, q) => acc + (q.completeness_score ?? 0),
       0
     ) / interview.questions.length
   );
-  const overallAvg = Math.round(
+
+  const overallAvg = interview.total_score ?? Math.round(
     (technicalAvg + communicationAvg + completenessAvg) / 3
   );
 
@@ -348,7 +260,7 @@ export default function InterviewReport() {
           <div className="space-y-3">
             {interview.questions.map((q, idx) => {
               const isExpanded = expandedQuestion === q.question_number;
-              const qScore = q.overall_score || 83;
+              const qScore = q.overall_score ?? 0;
               const fb = (q.feedback as any) || {};
 
               return (

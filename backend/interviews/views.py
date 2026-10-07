@@ -260,3 +260,21 @@ class SubmitAnswerView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+class InterviewListView(APIView):
+
+    def get(self, request):
+
+        interviews = Interview.objects.filter(
+            clerk_user_id=request.user.id
+        ).order_by("-created_at")
+
+        serializer = InterviewSerializer(
+            interviews,
+            many=True,
+        )
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+        )
