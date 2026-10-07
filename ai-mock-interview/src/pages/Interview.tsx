@@ -15,6 +15,7 @@ import type { Interview, InterviewQuestion } from "../types/api";
 import { createWarningEvent, submitAnswer } from "../services/api";
 import type {WarningEvent, WarningType} from "../types/interview";
 import { detectEyeMovement } from "../services/eyeMovementDetector";
+import { detectLipMovement } from "../services/lipMovementDetector";
 
 interface LocationState {
   interview?: Interview;
@@ -91,6 +92,9 @@ export default function InterviewPage() {
 
   const eyeMovementCountRef = useRef(0);
   const lastEyeWarningRef = useRef(0);
+
+  const lipMovementCountRef = useRef(0);
+  const lastLipWarningRef = useRef(0);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -192,6 +196,60 @@ export default function InterviewPage() {
         } catch (error) {
           console.error(
             "Eye movement detection error:",
+            error
+          );
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(detect);
+    };
+
+    detect();
+
+    return () => {
+      isActive = false;
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [stream, recordWarning]);
+
+  useEffect(() => {
+    if (!stream) return;
+
+    let animationFrameId = 0;
+    let isActive = true;
+
+    const detect = async () => {
+      if (!isActive) return;
+
+      const video = videoRef.current;
+
+      if (video) {
+        try {
+          const moved = await detectLipMovement(video);
+
+          if (moved) {
+            lipMovementCountRef.current += 1;
+          } else {
+            lipMovementCountRef.current = 0;
+          }
+
+          const now = Date.now();
+
+          const sustainedMovement =
+            lipMovementCountRef.current >= 3;
+
+          const cooldownPassed =
+            now - lastLipWarningRef.current >= 10000;
+
+          if (sustainedMovement && cooldownPassed) {
+            lastLipWarningRef.current = now;
+            lipMovementCountRef.current = 0;
+
+            await recordWarning("lip_movement");
+          }
+        } catch (error) {
+          console.error(
+            "Lip movement detection error:",
             error
           );
         }
