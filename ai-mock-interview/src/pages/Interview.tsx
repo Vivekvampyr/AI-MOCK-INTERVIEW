@@ -437,9 +437,9 @@ export default function InterviewPage() {
   const wordCount = answer.trim() ? answer.trim().split(/\s+/).length : 0;
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8] text-[#1A1A1A]">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-canvas text-text-primary">
       {/* Distraction-free top utility bar */}
-      <header className="border-b border-[#E5E5E0] bg-white px-4 py-3 sm:px-6">
+      <header className="border-b border-border-base bg-white px-4 py-3 sm:px-6">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -449,32 +449,32 @@ export default function InterviewPage() {
                   navigate("/dashboard");
                 }
               }}
-              className="flex items-center gap-1.5 text-xs font-medium text-[#6B6B6B] hover:text-[#1A1A1A]"
+              className="flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-text-primary"
               aria-label="Exit interview"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               <span>Exit session</span>
             </button>
-            <span className="text-[#E5E5E0]">|</span>
-            <span className="text-xs font-medium text-[#6B6B6B]">
+            <span className="text-border-base">|</span>
+            <span className="text-xs font-medium text-text-secondary">
               {interview.tech_stack.join(", ")} · {interview.experience} yrs
             </span>
           </div>
 
           {/* Quiet Timer & Progress */}
           <div className="flex items-center gap-5">
-            <div className="flex items-center gap-1.5 text-xs font-mono font-medium text-[#6B6B6B]">
-              <Clock className="h-3.5 w-3.5 text-[#8C8C88]" />
+            <div className="flex items-center gap-1.5 text-xs font-mono font-medium text-text-secondary">
+              <Clock className="h-3.5 w-3.5 text-text-tertiary" />
               <span>{formatTime(elapsedSeconds)}</span>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-[#1A1A1A]">
+              <span className="text-xs font-medium text-text-primary">
                 Question {currentQuestionIndex + 1} of {totalQuestions}
               </span>
-              <div className="h-1.5 w-20 overflow-hidden rounded-full bg-[#E5E5E0]">
+              <div className="h-1.5 w-20 overflow-hidden rounded-full bg-border-base">
                 <div
-                  className="h-full bg-[#0F5C5C] transition-all duration-200"
+                  className="h-full bg-primary transition-all duration-200"
                   style={{
                     width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%`,
                   }}
@@ -490,8 +490,8 @@ export default function InterviewPage() {
         <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
           {/* Left Column: Quiet Camera & Audio Monitor */}
           <aside className="space-y-4">
-            <div className="overflow-hidden rounded-xl border border-[#E5E5E0] bg-white shadow-subtle">
-              <div className="relative aspect-video w-full bg-[#1A1A1A]">
+            <div className="overflow-hidden rounded-xl border border-border-base bg-white shadow-subtle">
+              <div className="relative aspect-video w-full bg-background">
                 {stream ? (
                   <video
                     ref={videoRef}
@@ -503,24 +503,24 @@ export default function InterviewPage() {
                   
                 ) : (
                   <div className="flex h-full flex-col items-center justify-center text-center p-4">
-                    <Video className="h-7 w-7 text-[#8C8C88]" />
-                    <p className="mt-2 text-xs text-[#8C8C88]">
+                    <Video className="h-7 w-7 text-text-tertiary" />
+                    <p className="mt-2 text-xs text-text-tertiary">
                       Camera stream standby
                     </p>
                   </div>
                 )}
 
                 {warnings.length > 0 && (
-                  <div className="mt-3 rounded-lg border border-[#E8C8C8] bg-[#FFF7F7] px-3 py-2.5">
+                  <div className="mt-3 rounded-lg border border-border-error bg-background-error px-3 py-2.5">
                     <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-[#962828] animate-pulse" />
+                      <span className="h-2 w-2 rounded-full bg-error animate-pulse" />
 
-                      <span className="text-xs font-medium text-[#962828]">
+                      <span className="text-xs font-medium text-error">
                         Warning detected
                       </span>
                     </div>
 
-                    <p className="mt-1 text-[11px] text-[#6B6B6B]">
+                    <p className="mt-1 text-[11px] text-text-secondary">
                       {warnings[warnings.length - 1].type === "eye_movement"
                         ? "Please keep your eyes focused on the interview screen."
                         : warnings[warnings.length - 1].type === "lip_movement"
@@ -531,42 +531,42 @@ export default function InterviewPage() {
                 )}
 
                 {/* Subtle, non-neon live badge */}
-                <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 rounded-md bg-white/95 px-2 py-1 text-[11px] font-medium text-[#1A1A1A] border border-[#E5E5E0]">
-                  <span className="h-2 w-2 rounded-full bg-[#1F5F3F]" />
+                <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 rounded-md bg-white/95 px-2 py-1 text-[11px] font-medium text-text-primary border border-border-base">
+                  <span className="h-2 w-2 rounded-full bg-primary" />
                   <span>Recording Active</span>
                 </div>
               </div>
 
-              <div className="border-t border-[#E5E5E0] px-3.5 py-3 text-xs text-[#6B6B6B]">
+              <div className="border-t border-border-base px-3.5 py-3 text-xs text-text-secondary">
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 font-medium text-[#1A1A1A]">
-                    <Volume2 className="h-3.5 w-3.5 text-[#0F5C5C]" />
+                  <span className="flex items-center gap-1.5 font-medium text-text-primary">
+                    <Volume2 className="h-3.5 w-3.5 text-primary" />
                     Microphone Input
                   </span>
-                  <span className="rounded bg-[#EBF6EF] px-1.5 py-0.5 text-[11px] font-medium text-[#1F5F3F]">
+                  <span className="rounded bg-background-success px-1.5 py-0.5 text-[11px] font-medium text-text-success">
                     Connected
                   </span>
                 </div>
-                <p className="mt-1 text-[11px] leading-relaxed text-[#8C8C88]">
+                <p className="mt-1 text-[11px] leading-relaxed text-text-secondary">
                   Keep your focus forward and structure your responses clearly.
                 </p>
               </div>
             </div>
 
             {/* Quiet Tips / Checklist */}
-            <div className="rounded-xl border border-[#E5E5E0] bg-white p-4 text-xs text-[#6B6B6B]">
-              <h3 className="font-medium text-[#1A1A1A]">Response Guidelines</h3>
-              <ul className="mt-2.5 space-y-2 text-[#6B6B6B]">
+            <div className="rounded-xl border border-border-base bg-white p-4 text-xs text-text-secondary">
+              <h3 className="font-medium text-text-primary">Response Guidelines</h3>
+              <ul className="mt-2.5 space-y-2 text-text-secondary">
                 <li className="flex items-start gap-2">
-                  <span className="text-[#0F5C5C] font-semibold">1.</span>
+                  <span className="text-primary font-semibold">1.</span>
                   <span>State your direct answer or recommendation first.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-[#0F5C5C] font-semibold">2.</span>
+                  <span className="text-primary font-semibold">2.</span>
                   <span>Reference concrete technical trade-offs and edge cases.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-[#0F5C5C] font-semibold">3.</span>
+                  <span className="text-primary font-semibold">3.</span>
                   <span>Mention production experience and architectural rationale.</span>
                 </li>
               </ul>
@@ -574,19 +574,19 @@ export default function InterviewPage() {
           </aside>
 
           {/* Right Column: Question & Answer Workspace */}
-          <section className="flex flex-col rounded-xl border border-[#E5E5E0] bg-white p-6 shadow-subtle sm:p-8">
+          <section className="flex flex-col rounded-xl border border-border-base bg-white p-6 shadow-subtle sm:p-8">
             {/* Question Header */}
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#0F5C5C]">
+                <span className="text-xs font-semibold uppercase tracking-wider text-primary">
                   Question {currentQuestionIndex + 1}
                 </span>
-                <span className="text-xs text-[#8C8C88]">
+                <span className="text-xs text-text-secondary">
                   Technical Depth & Implementation
                 </span>
               </div>
 
-              <h1 className="mt-2 text-xl sm:text-2xl font-semibold leading-snug tracking-tight text-[#1A1A1A]">
+              <h1 className="mt-2 text-xl sm:text-2xl font-semibold leading-snug tracking-tight text-text-primary">
                 {currentQuestion.question}
               </h1>
             </div>
@@ -596,14 +596,14 @@ export default function InterviewPage() {
               <div className="flex items-center justify-between pb-2">
                 <label
                   htmlFor="interview-answer"
-                  className="text-xs font-medium text-[#1A1A1A]"
+                  className="text-xs font-medium text-text-primary"
                 >
                   Your Answer
                 </label>
 
                 <div className="flex items-center gap-3">
 
-                  <span className="text-xs text-[#8C8C88]">
+                  <span className="text-xs text-text-tertiary">
                     {wordCount} {wordCount === 1 ? "word" : "words"}
                   </span>
                 </div>
@@ -616,23 +616,23 @@ export default function InterviewPage() {
                 onChange={(e) => setAnswer(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type your structured response here, detailing implementation details, architectural choices, and why you made them..."
-                className="w-full flex-1 rounded-lg border border-[#E5E5E0] bg-[#FAFAF8] p-4 text-sm leading-relaxed text-[#1A1A1A] placeholder:text-[#8C8C88] focus:border-[#0F5C5C] focus:bg-white focus:outline-none"
+                className="w-full flex-1 rounded-lg border border-border-base bg-canvas p-4 text-sm leading-relaxed text-text-primary placeholder:text-text-tertiary focus:border-primary focus:bg-white focus:outline-none"
               />
 
-              <div className="mt-3 flex items-center justify-between text-xs text-[#8C8C88]">
+              <div className="mt-3 flex items-center justify-between text-xs text-text-tertiary">
                 <span>
-                  Shortcut: <kbd className="rounded border border-[#E5E5E0] bg-[#F5F5F2] px-1.5 py-0.5 text-[11px] font-mono text-[#1A1A1A]">Ctrl</kbd> + <kbd className="rounded border border-[#E5E5E0] bg-[#F5F5F2] px-1.5 py-0.5 text-[11px] font-mono text-[#1A1A1A]">Enter</kbd> to submit
+                  Shortcut: <kbd className="rounded border border-border-base bg-canvas px-1.5 py-0.5 text-[11px] font-mono text-text-primary">Ctrl</kbd> + <kbd className="rounded border border-border-base bg-canvas px-1.5 py-0.5 text-[11px] font-mono text-text-primary">Enter</kbd> to submit
                 </span>
               </div>
             </div>
 
             {/* Submission Footer */}
-            <div className="mt-8 flex items-center justify-between border-t border-[#E5E5E0] pt-5">
+            <div className="mt-8 flex items-center justify-between border-t border-border-base pt-5">
               <button
                 type="button"
                 onClick={() => setAnswer("")}
                 disabled={!answer}
-                className="text-xs font-medium text-[#6B6B6B] hover:text-[#1A1A1A] disabled:opacity-30 disabled:cursor-not-allowed"
+                className="text-xs font-medium text-text-muted hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 Clear text
               </button>
@@ -642,7 +642,7 @@ export default function InterviewPage() {
                   type="button"
                   onClick={handleSubmit}
                   disabled={!answer.trim() || isSubmitting}
-                  className="inline-flex items-center gap-2 rounded-md bg-[#0F5C5C] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#0A4444] disabled:cursor-not-allowed disabled:bg-[#D1D1CB] disabled:text-[#8C8C88]"
+                  className="inline-flex items-center gap-2 rounded-md bg-teal-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-teal-hover disabled:cursor-not-allowed disabled:bg-border-strong disabled:text-text-tertiary"
                 >
                   {isSubmitting ? (
                     "Saving response..."
