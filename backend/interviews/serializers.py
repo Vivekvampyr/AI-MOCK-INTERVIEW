@@ -22,6 +22,8 @@ class InterviewQuestionSerializer(
 class WarningEventSerializer(
     serializers.ModelSerializer
 ):
+    screenshot = serializers.SerializerMethodField()
+
     class Meta:
         model = WarningEvent
         fields = [
@@ -30,9 +32,22 @@ class WarningEventSerializer(
             "warning_type",
             "timestamp_seconds",
             "confidence",
-            "screenshot_url",
+            "screenshot",
             "created_at",
         ]
+
+    def get_screenshot(self, obj):
+        if not obj.screenshot:
+            return None
+
+        request = self.context.get("request")
+
+        if request:
+            return request.build_absolute_uri(
+                obj.screenshot.url
+            )
+
+        return obj.screenshot.url
 
 
 class InterviewSerializer(

@@ -14,7 +14,7 @@ from .models import (
     WarningEvent
 )
 
-from .serializers import InterviewSerializer
+from .serializers import (InterviewSerializer, WarningEventSerializer,)
 
 from .services.question_generator import (
     QuestionGenerator,
@@ -99,7 +99,8 @@ class StartInterviewView(APIView):
             interview.status = "failed"
 
         serializer = InterviewSerializer(
-            interview
+            interview,
+            context={"request": request},
         )
 
         return Response(
@@ -372,6 +373,7 @@ class CreateWarningEventView(APIView):
             warning_type=warning_type,
             timestamp_seconds=timestamp_seconds,
             confidence=confidence,
+            screenshot=request.FILES.get("screenshot"),
         )
 
         return Response(

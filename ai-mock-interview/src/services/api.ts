@@ -129,25 +129,50 @@ export async function terminateInterview(
 export async function createWarningEvent(
   token: string,
   interviewId: number,
-  warningType: "lip_movement" | "eye_movement" | "smart_device",
+  warningType:
+    | "lip_movement"
+    | "eye_movement"
+    | "smart_device",
   questionNumber: number,
   timestampSeconds: number,
-  confidence?: number
+  confidence?: number,
+  screenshot?: Blob
 ) {
+  const formData = new FormData();
+
+  formData.append("warning_type", warningType);
+  formData.append(
+    "question_number",
+    String(questionNumber)
+  );
+  formData.append(
+    "timestamp_seconds",
+    String(timestampSeconds)
+  );
+
+  if (confidence !== undefined) {
+    formData.append(
+      "confidence",
+      String(confidence)
+    );
+  }
+
+  if (screenshot) {
+    formData.append(
+      "screenshot",
+      screenshot,
+      `warning-${Date.now()}.jpg`
+    );
+  }
+
   const response = await fetch(
     `${API_BASE_URL}/interviews/${interviewId}/warning/`,
     {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        warning_type: warningType,
-        question_number: questionNumber,
-        timestamp_seconds: timestampSeconds,
-        confidence,
-      }),
+      body: formData,
     }
   );
 

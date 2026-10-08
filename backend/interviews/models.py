@@ -132,7 +132,8 @@ class WarningEvent(models.Model):
         blank=True,
     )
 
-    screenshot_url = models.URLField(
+    screenshot = models.ImageField(
+        upload_to="warning_screenshots/",
         null=True,
         blank=True,
     )

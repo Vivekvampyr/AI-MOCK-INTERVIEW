@@ -116,7 +116,6 @@ export default function InterviewPage() {
   const currentQuestion: InterviewQuestion = interview.questions[currentQuestionIndex] || interview.questions[0];
 
   
-  
   const recordWarning = useCallback(
     async (
       type: WarningType,
@@ -129,13 +128,51 @@ export default function InterviewPage() {
           return;
         }
 
+        const video = videoRef.current;
+
+        let screenshot: Blob | undefined;
+
+        if (
+          video &&
+          video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+          video.videoWidth > 0 &&
+          video.videoHeight > 0
+        ) {
+          const canvas = document.createElement("canvas");
+
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+
+          const context = canvas.getContext("2d");
+
+          if (context) {
+            context.drawImage(
+              video,
+              0,
+              0,
+              canvas.width,
+              canvas.height
+            );
+
+            screenshot =
+              await new Promise<Blob | undefined>((resolve) => {
+                canvas.toBlob(
+                  (blob) => resolve(blob ?? undefined),
+                  "image/jpeg",
+                  0.8
+                );
+              });
+          }
+        }
+
         const result = await createWarningEvent(
           token,
           interview.id,
           type,
           currentQuestion.question_number,
           elapsedSeconds,
-          confidence
+          confidence,
+          screenshot
         );
 
         if (result.warning) {
@@ -164,6 +201,7 @@ export default function InterviewPage() {
       elapsedSeconds,
     ]
   );
+  
 
   useEffect(() => {
     if (!stream) return;

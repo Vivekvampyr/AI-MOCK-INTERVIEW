@@ -33,6 +33,6 @@ export interface InterviewWarning {
     | "smart_device";
   timestamp_seconds: number;
   confidence: number | null;
-  screenshot_url: string | null;
+  screenshot: string | null;
   created_at: string;
 }

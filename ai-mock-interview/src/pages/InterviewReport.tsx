@@ -286,8 +286,20 @@ export default function InterviewReport() {
                       ? "Lip Movement"
                       : "Smart Device";
 
-                  const minutes = Math.floor(warning.timestamp_seconds / 60);
-                  const seconds = Math.floor(warning.timestamp_seconds % 60);
+                  const minutes = Math.floor(
+                    warning.timestamp_seconds / 60
+                  );
+
+                  const seconds = Math.floor(
+                    warning.timestamp_seconds % 60
+                  );
+
+                  const screenshotUrl =
+                    warning.screenshot
+                      ? warning.screenshot.startsWith("http")
+                        ? warning.screenshot
+                        : `http://127.0.0.1:8000${warning.screenshot}`
+                      : null;
 
                   return (
                     <div
@@ -305,6 +317,20 @@ export default function InterviewReport() {
                       </div>
 
                       <div className="flex items-center gap-4 text-xs text-[#6B6B6B]">
+                        {screenshotUrl && (
+                          <a
+                            href={screenshotUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <img
+                              src={screenshotUrl}
+                              alt={`${warningLabel} warning`}
+                              className="h-14 w-24 rounded-md border border-[#E5E5E0] object-cover"
+                            />
+                          </a>
+                        )}
+
                         <span className="font-mono">
                           {String(minutes).padStart(2, "0")}:
                           {String(seconds).padStart(2, "0")}
@@ -313,7 +339,8 @@ export default function InterviewReport() {
                         {warning.confidence !== null &&
                           warning.confidence !== undefined && (
                             <span>
-                              Confidence: {Math.round(warning.confidence * 100)}%
+                              Confidence:{" "}
+                              {Math.round(warning.confidence * 100)}%
                             </span>
                           )}
                       </div>
