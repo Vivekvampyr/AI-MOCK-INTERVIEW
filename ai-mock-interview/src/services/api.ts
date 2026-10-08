@@ -186,3 +186,39 @@ export async function createWarningEvent(
 
   return data;
 }
+
+export async function uploadInterviewRecording(
+  token: string,
+  interviewId: number,
+  recording: Blob
+) {
+  const formData = new FormData();
+
+  formData.append(
+    "recording",
+    recording,
+    `interview-${interviewId}.webm`
+  );
+
+  const response = await fetch(
+    `${API_BASE_URL}/interviews/${interviewId}/recording/`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error ||
+        "Failed to upload interview recording."
+    );
+  }
+
+  return data;
+}

@@ -77,4 +77,5 @@ class InterviewSerializer(
             "updated_at",
             "questions",
             "warnings",
+            "recording",
         ]

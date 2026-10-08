@@ -36,6 +36,12 @@ class Interview(models.Model):
         blank=True,
     )
 
+    recording = models.FileField(
+        upload_to="interview_recordings/",
+        null=True,
+        blank=True,
+    )
+
     status = models.CharField(
         max_length=20,
         default="created",

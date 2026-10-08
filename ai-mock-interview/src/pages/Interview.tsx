@@ -12,7 +12,7 @@ import {
 
 import { useMedia } from "../context/MediaContext";
 import type { Interview, InterviewQuestion } from "../types/api";
-import { createWarningEvent, submitAnswer, terminateInterview } from "../services/api";
+import { createWarningEvent, submitAnswer, terminateInterview, uploadInterviewRecording, } from "../services/api";
 import type {WarningEvent, WarningType} from "../types/interview";
 import { detectEyeMovement } from "../services/eyeMovementDetector";
 import { detectLipMovement } from "../services/lipMovementDetector";
@@ -103,6 +103,9 @@ export default function InterviewPage() {
   const lastSmartDeviceWarningRef = useRef(0);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
 
   const state = location.state as LocationState | null;
   const interview = state?.interview || fallbackInterview;
@@ -376,6 +379,39 @@ export default function InterviewPage() {
     };
   }, [stream, recordWarning]);
 
+  useEffect(() => {
+    if (!stream) return;
+
+    if (!MediaRecorder.isTypeSupported("video/webm")) {
+      console.error("MediaRecorder WebM is not supported.");
+      return;
+    }
+
+    const recorder = new MediaRecorder(stream, {
+      mimeType: "video/webm",
+    });
+
+    recordedChunksRef.current = [];
+
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        recordedChunksRef.current.push(event.data);
+      }
+    };
+
+    recorder.start(1000);
+
+    mediaRecorderRef.current = recorder;
+
+    return () => {
+      if (recorder.state !== "inactive") {
+        recorder.stop();
+      }
+
+      mediaRecorderRef.current = null;
+    };
+  }, [stream]);
+
   // Timer: quiet elapsed counter
   useEffect(() => {
     const timer = setInterval(() => {
@@ -413,6 +449,30 @@ export default function InterviewPage() {
     }
   };
 
+  const stopRecording = (): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      const recorder = mediaRecorderRef.current;
+
+      if (!recorder || recorder.state === "inactive") {
+        resolve(null);
+        return;
+      }
+
+      recorder.onstop = () => {
+        const blob =
+          recordedChunksRef.current.length > 0
+            ? new Blob(recordedChunksRef.current, {
+                type: "video/webm",
+              })
+            : null;
+
+        resolve(blob);
+      };
+
+      recorder.stop();
+    });
+  };
+
   const handleSubmit = async () => {
     if (!answer.trim() || isSubmitting) return;
 
@@ -447,7 +507,19 @@ export default function InterviewPage() {
 
       if (isLastQuestion) {
         if (!result.interview) {
-          throw new Error("Completed interview data was not returned.");
+          throw new Error(
+            "Completed interview data was not returned."
+          );
+        }
+
+        const recordingBlob = await stopRecording();
+
+        if (recordingBlob) {
+          await uploadInterviewRecording(
+            token,
+            interview.id,
+            recordingBlob
+          );
         }
 
         navigate("/interview/report", {

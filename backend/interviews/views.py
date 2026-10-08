@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from .services.answer_evaluator import AnswerEvaluator
+from rest_framework.parsers import MultiPartParser, FormParser
 
 import traceback
 
@@ -388,4 +389,40 @@ class CreateWarningEventView(APIView):
                 },
             },
             status=status.HTTP_201_CREATED,
+        )
+
+class UploadInterviewRecordingView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, interview_id):
+        interview = get_object_or_404(
+            Interview,
+            id=interview_id,
+            clerk_user_id=request.user.id,
+        )
+
+        recording = request.FILES.get("recording")
+
+        if not recording:
+            return Response(
+                {"error": "Recording file is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        interview.recording = recording
+        interview.save(
+            update_fields=[
+                "recording",
+                "updated_at",
+            ]
+        )
+
+        serializer = InterviewSerializer(
+            interview,
+            context={"request": request},
+        )
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
         )

@@ -5,7 +5,8 @@ from .views import (
     SubmitAnswerView,
     InterviewListView,
     CreateWarningEventView,
-    TerminateInterviewView
+    TerminateInterviewView,
+    UploadInterviewRecordingView,
 )
 
 
@@ -34,5 +35,10 @@ urlpatterns = [
         "<int:interview_id>/terminate/",
         TerminateInterviewView.as_view(),
         name="terminate-interview",
+    ),
+    path(
+        "<int:interview_id>/recording/",
+        UploadInterviewRecordingView.as_view(),
+        name="upload-interview-recording",
     ),
 ]
