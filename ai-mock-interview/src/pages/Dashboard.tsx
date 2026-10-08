@@ -111,10 +111,67 @@ export default function Dashboard() {
         )
       : 0;
 
-  const bestScore =
-    sessions.length > 0
-      ? Math.max(...sessions.map((session) => session.score))
+  const sortedSessions = [...sessions].sort(
+    (a, b) =>
+      new Date(b.interview.created_at).getTime() -
+      new Date(a.interview.created_at).getTime()
+  );
+
+  const recentSession = sortedSessions[0];
+
+  const previousSession = sortedSessions[1];
+
+  const recentScore = recentSession?.score ?? 0;
+
+  const improvement =
+    recentSession && previousSession
+      ? recentScore - previousSession.score
       : 0;
+
+  const bestSession = sessions.reduce<SessionRecord | null>(
+    (best, session) =>
+      !best || session.score > best.score ? session : best,
+    null
+  );
+
+  const bestScore = bestSession?.score ?? 0;
+
+  const specialtyCount = new Set(
+    sessions.flatMap((session) => session.techStack)
+  ).size;
+
+  const chartSessions = sortedSessions
+    .slice(0, 4)
+    .reverse();
+
+  const chartPoints = chartSessions
+    .map((session, index) => {
+      const x =
+        chartSessions.length === 1
+          ? 300
+          : 90 + index * (440 / (chartSessions.length - 1));
+
+      const y = Math.max(
+        20,
+        Math.min(140, 220 - session.score * 2)
+      );
+
+      return {
+        x,
+        y,
+        score: session.score,
+        date: new Date(
+          session.interview.created_at
+        ).toLocaleDateString("en-IN", {
+          month: "short",
+          day: "numeric",
+        }),
+      };
+    });
+
+  const chartPolyline = chartPoints
+    .map((point) => `${point.x},${point.y}`)
+    .join(" ");
 
   return (
     <div className="min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8] text-[#1A1A1A] py-8 px-4 sm:px-6">
@@ -159,7 +216,7 @@ export default function Dashboard() {
             </div>
 
             <p className="mt-1 text-[11px] text-[#8C8C88]">
-              Across 4 engineering specialties
+              Across {specialtyCount} technologies practiced
             </p>
           </div>
 
@@ -175,7 +232,11 @@ export default function Dashboard() {
             </div>
 
             <p className="mt-1 text-[11px] text-[#1F5F3F] font-medium">
-              +11 pts improvement over last month
+              {improvement > 0
+                ? `+${improvement} pts from previous session`
+                : improvement < 0
+                ? `${improvement} pts from previous session`
+                : "No change from previous session"}
             </p>
           </div>
 
@@ -191,7 +252,9 @@ export default function Dashboard() {
             </div>
 
             <p className="mt-1 text-[11px] text-[#8C8C88]">
-              Achieved in Full Stack (React x Django)
+              {bestSession
+                ? `Best result in ${bestSession.techStack.join(" · ")}`
+                : "No completed sessions yet"}
             </p>
           </div>
         </div>
@@ -211,7 +274,7 @@ export default function Dashboard() {
             </div>
 
             <span className="text-xs font-mono font-medium text-[#0F5C5C]">
-              Recent: 85%
+              Recent: {recentScore}%
             </span>
           </div>
 
@@ -304,108 +367,40 @@ export default function Dashboard() {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  points="90,72 230,64 380,58 530,50"
+                  points={chartPolyline}
                 />
 
-                <g>
-                  <circle cx="90" cy="72" r="4" fill="#0F5C5C" />
+                {chartPoints.map((point, index) => (
+                  <g key={index}>
+                    <circle
+                      cx={point.x}
+                      cy={point.y}
+                      r="4"
+                      fill="#0F5C5C"
+                    />
 
-                  <text
-                    x="90"
-                    y="90"
-                    textAnchor="middle"
-                    fontSize="11"
-                    fill="#1A1A1A"
-                    fontWeight="500"
-                  >
-                    74%
-                  </text>
+                    <text
+                      x={point.x}
+                      y={Math.max(12, point.y - 10)}
+                      textAnchor="middle"
+                      fontSize="11"
+                      fill="#1A1A1A"
+                      fontWeight="500"
+                    >
+                      {point.score}%
+                    </text>
 
-                  <text
-                    x="90"
-                    y="155"
-                    textAnchor="middle"
-                    fontSize="10"
-                    fill="#8C8C88"
-                  >
-                    Sep 15
-                  </text>
-                </g>
-
-                <g>
-                  <circle cx="230" cy="64" r="4" fill="#0F5C5C" />
-
-                  <text
-                    x="230"
-                    y="82"
-                    textAnchor="middle"
-                    fontSize="11"
-                    fill="#1A1A1A"
-                    fontWeight="500"
-                  >
-                    78%
-                  </text>
-
-                  <text
-                    x="230"
-                    y="155"
-                    textAnchor="middle"
-                    fontSize="10"
-                    fill="#8C8C88"
-                  >
-                    Sep 22
-                  </text>
-                </g>
-
-                <g>
-                  <circle cx="380" cy="58" r="4" fill="#0F5C5C" />
-
-                  <text
-                    x="380"
-                    y="76"
-                    textAnchor="middle"
-                    fontSize="11"
-                    fill="#1A1A1A"
-                    fontWeight="500"
-                  >
-                    81%
-                  </text>
-
-                  <text
-                    x="380"
-                    y="155"
-                    textAnchor="middle"
-                    fontSize="10"
-                    fill="#8C8C88"
-                  >
-                    Sep 29
-                  </text>
-                </g>
-
-                <g>
-                  <circle cx="530" cy="50" r="4" fill="#0F5C5C" />
-
-                  <text
-                    x="530"
-                    y="40"
-                    textAnchor="middle"
-                    fontSize="11"
-                    fill="#0F5C5C"
-                    fontWeight="600"
-                  >
-                    85%
-                  </text>
-
-                  <text
-                    x="530"
-                    y="155"
-                    textAnchor="middle"
-                    fontSize="10"
-                    fill="#8C8C88"
-                  >
-                    Oct 6
-                  </text>
-                </g>
+                    <text
+                      x={point.x}
+                      y="155"
+                      textAnchor="middle"
+                      fontSize="10"
+                      fill="#8C8C88"
+                    >
+                      {point.date}
+                    </text>
+                  </g>
+                ))}
               </svg>
             </div>
           </div>

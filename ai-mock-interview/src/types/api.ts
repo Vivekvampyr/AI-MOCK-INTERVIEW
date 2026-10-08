@@ -22,6 +22,7 @@ export interface Interview {
   updated_at: string;
   questions: InterviewQuestion[];
   warnings: InterviewWarning[];
+  recording: string | null;
 }
 
 export interface InterviewWarning {

@@ -84,6 +84,7 @@ const fallbackInterview: Interview = {
     },
   ],
   warnings: [],
+  recording: "",
 };
 
 export default function InterviewPage() {
@@ -514,8 +515,10 @@ export default function InterviewPage() {
 
         const recordingBlob = await stopRecording();
 
+        let finalInterview = result.interview;
+
         if (recordingBlob) {
-          await uploadInterviewRecording(
+          finalInterview = await uploadInterviewRecording(
             token,
             interview.id,
             recordingBlob
@@ -524,7 +527,7 @@ export default function InterviewPage() {
 
         navigate("/interview/report", {
           state: {
-            interview: result.interview,
+            interview: finalInterview,
             totalDuration: elapsedSeconds,
           },
         });

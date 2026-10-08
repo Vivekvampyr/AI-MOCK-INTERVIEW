@@ -36,6 +36,11 @@ class Interview(models.Model):
         blank=True,
     )
 
+    duration_seconds = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+    )
+
     recording = models.FileField(
         upload_to="interview_recordings/",
         null=True,
