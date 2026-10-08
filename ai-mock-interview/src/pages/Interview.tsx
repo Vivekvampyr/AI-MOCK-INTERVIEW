@@ -496,7 +496,8 @@ export default function InterviewPage() {
         token,
         interview.id,
         currentQuestion.question_number,
-        trimmedAnswer
+        trimmedAnswer,
+        isLastQuestion ? elapsedSeconds : undefined
       );
 
       const updatedAnswers = {

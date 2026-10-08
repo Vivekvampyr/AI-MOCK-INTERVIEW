@@ -78,4 +78,5 @@ class InterviewSerializer(
             "questions",
             "warnings",
             "recording",
+            "duration_seconds"
         ]

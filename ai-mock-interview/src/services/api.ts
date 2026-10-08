@@ -71,7 +71,8 @@ export async function submitAnswer(
   token: string,
   interviewId: number,
   questionNumber: number,
-  answer: string
+  answer: string,
+  durationSeconds?: number
 ) {
   const response = await fetch(
     `${API_BASE_URL}/interviews/${interviewId}/answer/`,
@@ -86,6 +87,7 @@ export async function submitAnswer(
       body: JSON.stringify({
         question_number: questionNumber,
         answer,
+        duration_seconds: durationSeconds,
       }),
     }
   );

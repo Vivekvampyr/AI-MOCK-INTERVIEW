@@ -189,6 +189,11 @@ class SubmitAnswerView(APIView):
             ]
         )
 
+        duration_seconds = request.data.get("duration_seconds")
+
+        if duration_seconds is not None:
+            interview.duration_seconds = int(duration_seconds)
+
         is_last_question = (
             question_number == interview.total_questions
         )
@@ -219,6 +224,7 @@ class SubmitAnswerView(APIView):
                     "total_score",
                     "status",
                     "updated_at",
+                    "duration_seconds",
                 ]
             )
 
