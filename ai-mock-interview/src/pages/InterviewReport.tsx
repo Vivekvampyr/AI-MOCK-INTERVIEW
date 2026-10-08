@@ -246,6 +246,85 @@ export default function InterviewReport() {
           </div>
         </div>
 
+
+        {/* Interview Warnings */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-semibold text-[#1A1A1A]">
+                Interview Monitoring
+              </h2>
+              <p className="text-xs text-[#6B6B6B]">
+                Behavioral monitoring events detected during the session
+              </p>
+            </div>
+
+            <span className="text-xs font-medium text-[#6B6B6B]">
+              {interview.warnings.length} warnings
+            </span>
+          </div>
+
+          {interview.warnings.length === 0 ? (
+            <div className="rounded-xl border border-[#C8E5D3] bg-[#EBF6EF]/50 p-5">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[#1F5F3F]">
+                <CheckCircle2 className="h-4 w-4" />
+                <span>No warnings detected</span>
+              </div>
+
+              <p className="mt-1.5 text-xs text-[#6B6B6B]">
+                No monitoring events were recorded during this interview.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-[#E5E5E0] bg-white shadow-subtle">
+              <div className="divide-y divide-[#E5E5E0]">
+                {interview.warnings.map((warning) => {
+                  const warningLabel =
+                    warning.warning_type === "eye_movement"
+                      ? "Eye Movement"
+                      : warning.warning_type === "lip_movement"
+                      ? "Lip Movement"
+                      : "Smart Device";
+
+                  const minutes = Math.floor(warning.timestamp_seconds / 60);
+                  const seconds = Math.floor(warning.timestamp_seconds % 60);
+
+                  return (
+                    <div
+                      key={warning.id}
+                      className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div>
+                        <div className="text-sm font-medium text-[#1A1A1A]">
+                          {warningLabel}
+                        </div>
+
+                        <div className="mt-1 text-xs text-[#6B6B6B]">
+                          Question {warning.question_number}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4 text-xs text-[#6B6B6B]">
+                        <span className="font-mono">
+                          {String(minutes).padStart(2, "0")}:
+                          {String(seconds).padStart(2, "0")}
+                        </span>
+
+                        {warning.confidence !== null &&
+                          warning.confidence !== undefined && (
+                            <span>
+                              Confidence: {Math.round(warning.confidence * 100)}%
+                            </span>
+                          )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </section>  
+              
         {/* Per-Question Breakdown */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">

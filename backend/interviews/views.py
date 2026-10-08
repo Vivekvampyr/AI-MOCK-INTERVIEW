@@ -262,22 +262,56 @@ class SubmitAnswerView(APIView):
             status=status.HTTP_200_OK,
         )
 
+class TerminateInterviewView(APIView):
+
+    def post(self, request, interview_id):
+
+        interview = get_object_or_404(
+            Interview,
+            id=interview_id,
+            clerk_user_id=request.user.id,
+        )
+
+        if interview.status == "completed":
+            return Response(
+                {
+                    "error": "Completed interviews cannot be terminated."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        interview.status = "terminated"
+
+        interview.save(
+            update_fields=[
+                "status",
+                "updated_at",
+            ]
+        )
+
+        return Response(
+            {
+                "message": "Interview terminated successfully.",
+                "status": interview.status,
+            },
+            status=status.HTTP_200_OK,
+        )
+
 class InterviewListView(APIView):
-
     def get(self, request):
-
         interviews = Interview.objects.filter(
-            clerk_user_id=request.user.id
+            clerk_user_id=request.user.id,
+            status="completed",
         ).order_by("-created_at")
 
         serializer = InterviewSerializer(
             interviews,
-            many=True,
+            many=True
         )
 
         return Response(
             serializer.data,
-            status=status.HTTP_200_OK,
+            status=status.HTTP_200_OK
         )
 
 class CreateWarningEventView(APIView):

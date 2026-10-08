@@ -101,6 +101,31 @@ export async function submitAnswer(
   return data;
 }
 
+export async function terminateInterview(
+  token: string,
+  interviewId: number
+) {
+  const response = await fetch(
+    `${API_BASE_URL}/interviews/${interviewId}/terminate/`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.error || "Failed to terminate interview."
+    );
+  }
+
+  return data;
+}
+
 export async function createWarningEvent(
   token: string,
   interviewId: number,

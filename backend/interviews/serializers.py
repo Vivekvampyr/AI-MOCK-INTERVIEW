@@ -1,7 +1,5 @@
 from rest_framework import serializers
-
-from .models import Interview, InterviewQuestion
-
+from .models import (Interview, InterviewQuestion, WarningEvent)
 
 class InterviewQuestionSerializer(
     serializers.ModelSerializer
@@ -21,10 +19,31 @@ class InterviewQuestionSerializer(
         ]
 
 
+class WarningEventSerializer(
+    serializers.ModelSerializer
+):
+    class Meta:
+        model = WarningEvent
+        fields = [
+            "id",
+            "question_number",
+            "warning_type",
+            "timestamp_seconds",
+            "confidence",
+            "screenshot_url",
+            "created_at",
+        ]
+
+
 class InterviewSerializer(
     serializers.ModelSerializer
 ):
     questions = InterviewQuestionSerializer(
+        many=True,
+        read_only=True,
+    )
+
+    warnings = WarningEventSerializer(
         many=True,
         read_only=True,
     )
@@ -42,4 +61,5 @@ class InterviewSerializer(
             "created_at",
             "updated_at",
             "questions",
+            "warnings",
         ]

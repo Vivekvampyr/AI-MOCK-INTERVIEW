@@ -4,7 +4,8 @@ from .views import (
     StartInterviewView,
     SubmitAnswerView,
     InterviewListView,
-    CreateWarningEventView
+    CreateWarningEventView,
+    TerminateInterviewView
 )
 
 
@@ -28,5 +29,10 @@ urlpatterns = [
         "<int:interview_id>/warning/",
         CreateWarningEventView.as_view(),
         name="create-warning-event",
+    ),
+    path(
+        "<int:interview_id>/terminate/",
+        TerminateInterviewView.as_view(),
+        name="terminate-interview",
     ),
 ]

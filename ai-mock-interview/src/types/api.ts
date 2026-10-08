@@ -21,4 +21,18 @@ export interface Interview {
   created_at: string;
   updated_at: string;
   questions: InterviewQuestion[];
+  warnings: InterviewWarning[];
+}
+
+export interface InterviewWarning {
+  id: number;
+  question_number: number;
+  warning_type:
+    | "lip_movement"
+    | "eye_movement"
+    | "smart_device";
+  timestamp_seconds: number;
+  confidence: number | null;
+  screenshot_url: string | null;
+  created_at: string;
 }

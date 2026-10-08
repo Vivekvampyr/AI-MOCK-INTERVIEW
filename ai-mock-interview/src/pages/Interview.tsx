@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import { useAuth } from "@clerk/react";
 import {
   Clock,
@@ -12,7 +12,7 @@ import {
 
 import { useMedia } from "../context/MediaContext";
 import type { Interview, InterviewQuestion } from "../types/api";
-import { createWarningEvent, submitAnswer } from "../services/api";
+import { createWarningEvent, submitAnswer, terminateInterview } from "../services/api";
 import type {WarningEvent, WarningType} from "../types/interview";
 import { detectEyeMovement } from "../services/eyeMovementDetector";
 import { detectLipMovement } from "../services/lipMovementDetector";
@@ -83,11 +83,13 @@ const fallbackInterview: Interview = {
       feedback: {},
     },
   ],
+  warnings: [],
 };
 
 export default function InterviewPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  
   const { getToken } = useAuth();
   const { stream } = useMedia();
 
@@ -111,9 +113,10 @@ export default function InterviewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [warnings, setWarnings] = useState<WarningEvent[]>([]);
-  const currentQuestion: InterviewQuestion =
-    interview.questions[currentQuestionIndex] || interview.questions[0];
+  const currentQuestion: InterviewQuestion = interview.questions[currentQuestionIndex] || interview.questions[0];
 
+  
+  
   const recordWarning = useCallback(
     async (
       type: WarningType,
@@ -530,10 +533,15 @@ export default function InterviewPage() {
                   </div>
                 )}
 
-                {/* Subtle, non-neon live badge */}
+                {/* Recording status */}
                 <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 rounded-md bg-white/95 px-2 py-1 text-[11px] font-medium text-text-primary border border-border-base">
                   <span className="h-2 w-2 rounded-full bg-primary" />
                   <span>Recording Active</span>
+                </div>
+
+                {/* Live warning count */}
+                <div className="absolute top-2.5 right-2.5 rounded-md bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-text-primary border border-border-base">
+                  {warnings.length}: Warnings
                 </div>
               </div>
 
