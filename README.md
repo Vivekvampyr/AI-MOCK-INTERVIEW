@@ -1,65 +1,30 @@
-# AI Mock Interview
+﻿# AI Mock Interview
 
-An AI-powered mock interview platform for practicing technical interviews. It combines a React frontend with a Django backend to generate interview questions, capture candidate responses, evaluate answers with AI, and track common interview integrity signals such as eye movement, lip movement, and device-use warnings.
+AI Mock Interview is a full-stack mock interview platform built for technical interview practice. The app combines a React + TypeScript frontend with a Django REST API to generate interview questions, capture candidate responses, score answers with AI, and track interview integrity signals such as eye movement, lip movement, and smart-device use.
 
-> Project status: approximately 60–70% complete.
->
-> The core product flow is implemented as a functional MVP, but the project is still under active development and not yet production-ready. Several flows are in progress or require polishing before a stable release.
+## Overview
 
-## What is already implemented
+This project is designed to simulate a realistic technical interview flow:
 
-### Frontend
+- Candidates sign in and choose their experience level and technology stack
+- The backend generates a set of interview questions using Groq-powered AI
+- The frontend captures answers with webcam and microphone permissions
+- Interview responses are stored and evaluated with AI scoring feedback
+- The application tracks suspicious behavior and records warning events during the session
+- A final report summarizes the candidate's performance and interview insights
 
-- Landing page and marketing-style product overview
-- Sign-in and sign-up flows powered by Clerk
-- Protected authenticated routes
-- Candidate dashboard flow
-- Interview setup form for experience level and tech stack selection
-- Camera and microphone permission flow
-- Live interview screen with question rendering and answer capture
-- Final interview report page and result summary flow
-- Browser-side monitoring for eye movement, lip movement, and smart-device detection
+## Current status
 
-### Backend
-
-- Django REST API with DRF
-- Clerk-based API authentication middleware
-- PostgreSQL configuration for local development with Docker Compose
-- Interview creation and AI question generation with Groq
-- Interview answer persistence and scoring evaluation
-- Interview history retrieval for authenticated users
-- Warning event logging for suspicious interview behavior
-- Database models for interviews, questions, scores, feedback, and warnings
-
-### Product flow
-
-- Candidate signs in
-- Selects experience level and technologies
-- Starts an interview with AI-generated technical questions
-- Answers questions in a timed session
-- Monitoring checks run during the session
-- Answers are saved and evaluated
-- Final status and summary are produced
-
-## Current focus and remaining work
-
-The project is beyond the initial prototype stage, but several areas still need completion before release:
-
-- Finalize the full interview completion flow and end-to-end transitions
-- Improve dashboard history and reporting polish
-- Refine AI evaluation quality and feedback consistency
-- Stabilize monitoring detection thresholds and warning logging
-- Improve error handling, validation, and edge-case coverage
-- Add broader testing and deployment configuration
-- Harden production security settings before public launch
+This repository is a working MVP in active development. The core flow is implemented and functional locally, but it is not yet production-ready and should be treated as a development project.
 
 ## Tech stack
 
-- Frontend: React 19, TypeScript, Vite, Tailwind CSS, React Router
+- Frontend: React 19, TypeScript, Vite, React Router
+- Styling: Tailwind CSS
 - Authentication: Clerk
 - Backend: Python, Django, Django REST Framework
 - Database: PostgreSQL
-- AI generation and evaluation: Groq API
+- AI: Groq
 - Media monitoring: TensorFlow.js, MediaPipe, browser webcam APIs
 
 ## Repository structure
@@ -67,24 +32,60 @@ The project is beyond the initial prototype stage, but several areas still need 
 ```text
 .
 ├── README.md
-├── ai-mock-interview/      # React + TypeScript frontend
-│   ├── src/                # App pages, UI, services, hooks, and context
+├── ai-mock-interview/        # React frontend
+│   ├── src/                  # App pages, components, services, and contexts
 │   ├── package.json
-│   └── .env.example
-├── backend/                # Django API and PostgreSQL configuration
-│   ├── authentication/     # Clerk auth integration
-│   ├── config/             # Django settings and URLs
-│   ├── interviews/         # Interview models, serializers, views, and AI logic
-│   ├── docker-compose.yml  # PostgreSQL local setup
+│   ├── .env.example
+│   └── vite.config.ts
+├── backend/                 # Django backend
+│   ├── authentication/       # Clerk auth middleware and related logic
+│   ├── config/               # Django settings, URLs, and ASGI/WSGI config
+│   ├── interviews/           # Interview models, views, serializers, and AI logic
+│   ├── docker-compose.yml    # Local PostgreSQL setup
 │   ├── manage.py
 │   ├── requirements.txt
-│   └── .env.example
-└── .gitignore
+│   ├── .env.example
+│   └── media/                # Recorded interviews and warning screenshots
+├── .gitignore
+└── .vscode/                  # Optional editor settings
 ```
 
-## Local development setup
+## Features
 
-These instructions are for local development on Windows. You will need Node.js/npm, Python, Docker with Compose, and valid Clerk and Groq credentials.
+### Frontend
+
+- Marketing landing page and application shell
+- Clerk-powered sign-in and sign-up
+- Protected routes for authenticated users
+- Candidate dashboard with interview history
+- Interview configuration form for experience and stack selection
+- Permission flow for camera and microphone access
+- Live interview screen with question rendering and answer capture
+- Final interview report and summary view
+- Browser-side monitoring for eye movement, lip movement, and smart-device detection
+
+### Backend
+
+- Django REST API with DRF
+- Clerk JWT authentication for protected endpoints
+- PostgreSQL local development configuration via Docker Compose
+- AI-generated technical interview questions
+- Interview answer evaluation using Groq-backed scoring
+- Persistence of interview/answer history and feedback
+- Warning event logging for suspicious user activity
+- Media upload support for recordings and screenshots
+
+## Prerequisites
+
+Before running the project locally, make sure you have:
+
+- Node.js 20+ and npm
+- Python 3.12+
+- Docker Desktop with Docker Compose
+- Clerk account and publishable/secret keys
+- Groq API key
+
+## Local development setup
 
 ### 1. Start PostgreSQL
 
@@ -95,11 +96,11 @@ cd backend
 docker compose up -d postgres
 ```
 
-This project uses PostgreSQL at `localhost:5434` for local development. The included credentials are for development only and should not be used in production.
+This project uses PostgreSQL on `localhost:5434` for development.
 
 ### 2. Configure backend environment
 
-Create `backend/.env` based on the example values:
+Create a `backend/.env` file using the example structure below:
 
 ```dotenv
 SECRET_KEY=replace-with-a-django-secret-key
@@ -115,7 +116,7 @@ GROQ_API_KEY=your-groq-api-key
 GROQ_MODEL=openai/gpt-oss-120b
 ```
 
-Then install dependencies and run migrations:
+Then install the Python dependencies and run database migrations:
 
 ```powershell
 cd backend
@@ -126,17 +127,19 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-The backend runs by default at `http://127.0.0.1:8000`.
+The backend runs at:
+
+- `http://127.0.0.1:8000`
 
 ### 3. Configure frontend environment
 
-Create `ai-mock-interview/.env` with your Clerk publishable key:
+Create an `ai-mock-interview/.env` file with your Clerk publishable key:
 
 ```dotenv
 VITE_CLERK_PUBLISHABLE_KEY=your-clerk-publishable-key
 ```
 
-Then start the frontend in a separate terminal:
+Then install the frontend dependencies and start the dev server:
 
 ```powershell
 cd ai-mock-interview
@@ -144,24 +147,26 @@ npm install
 npm run dev
 ```
 
-Open the Vite URL shown in the terminal (typically `http://localhost:5173`).
+Open the dev server URL shown in the terminal, usually:
+
+- `http://localhost:5173`
 
 ## API overview
 
-The backend exposes interview-related endpoints for authenticated users.
+The backend exposes the following interview-related endpoints. All of them require authentication via Clerk-issued tokens.
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
+| `GET` | `/api/interviews/` | Retrieve the authenticated user's interview history |
 | `POST` | `/api/interviews/start/` | Create a new interview and generate questions |
-| `GET` | `/api/interviews/` | Get the authenticated user's interviews |
-| `POST` | `/api/interviews/<interview_id>/answer/` | Save and evaluate a candidate answer |
+| `POST` | `/api/interviews/<interview_id>/answer/` | Submit and evaluate an answer |
 | `POST` | `/api/interviews/<interview_id>/warning/` | Save a monitoring warning event |
-
-Authentication is required for all endpoints via Clerk-issued tokens.
+| `POST` | `/api/interviews/<interview_id>/terminate/` | Mark the interview as terminated |
+| `POST` | `/api/interviews/<interview_id>/recording/` | Upload a completed interview recording |
 
 ## Development commands
 
-Frontend commands:
+### Frontend
 
 ```powershell
 cd ai-mock-interview
@@ -171,7 +176,7 @@ npm run lint
 npm run preview
 ```
 
-Backend commands:
+### Backend
 
 ```powershell
 cd backend
@@ -181,10 +186,10 @@ python manage.py test
 
 ## Notes
 
-- This is a local-development MVP and not yet a production deployment.
-- Use `.env` files only for local configuration and keep secrets private.
-- The project is structured to evolve toward a full interview platform with stronger monitoring, scoring, reporting, and operational tooling.
+- This is a local-development MVP and not a production deployment.
+- Keep all secrets in local `.env` files and do not commit them to source control.
+- The project is structured to evolve into a broader interview platform with stronger evaluation, reporting, monitoring, and operational tooling.
 
 ## License
 
-No license has been added to the repository yet. Until a license is added, all rights are reserved by the project owner.
+No license has been added to this repository yet. Until a license is added, all rights are reserved by the project owner.
