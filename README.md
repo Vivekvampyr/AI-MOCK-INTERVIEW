@@ -15,7 +15,9 @@ This project is designed to simulate a realistic technical interview flow:
 
 ## Current status
 
-This repository is a working MVP in active development. The core flow is implemented and functional locally, but it is not yet production-ready and should be treated as a development project.
+This repository is a functioning local prototype for an AI-powered mock interview platform. The end-to-end flow is implemented across the React frontend and Django backend: authentication, interview setup, AI question generation, answer capture, evaluation, warning tracking, and interview reporting all work together in a local development environment.
+
+The project is not yet production-ready. It is best treated as a development/demo application that still needs hardening around deployment, monitoring, automated testing, production configuration, and operational polish.
 
 ## Tech stack
 
