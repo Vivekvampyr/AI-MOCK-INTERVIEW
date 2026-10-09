@@ -17,11 +17,15 @@
     "@tensorflow/tfjs": "^4.22.0",
     "@tensorflow/tfjs-backend-cpu": "^4.22.0",
     "@tensorflow/tfjs-backend-webgl": "^4.22.0",
+    "buffer": "^6.0.3",
+    "fix-webm-duration": "^1.0.6",
     "lucide-react": "^1.52.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.4",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.3",
+    "ts-ebml": "^3.0.2",
+    "webm-duration-fix": "^1.0.4"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
