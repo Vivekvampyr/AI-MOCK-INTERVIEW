@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
   Plus,
   ArrowUpRight,
@@ -49,6 +49,13 @@ export default function Dashboard() {
   const { user } = useUser();
   const { getToken } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const terminationMessage = (
+    location.state as { terminationMessage?: string } | null
+  )?.terminationMessage;
+
+  
 
   const handleInterviewSetup = async (setup: InterviewSetup) => {
     try {
@@ -193,6 +200,22 @@ export default function Dashboard() {
   return (
     <div className="min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8] text-[#1A1A1A] py-8 px-4 sm:px-6">
       <div className="mx-auto max-w-6xl space-y-8">
+        
+
+        {terminationMessage && (
+          <div
+            role="alert"
+            className="rounded-lg border border-red-200 bg-red-50 px-5 py-4"
+          >
+            <h2 className="text-sm font-semibold text-red-800">
+              Interview Terminated
+            </h2>
+
+            <p className="mt-1 text-sm text-red-700">
+              {terminationMessage}
+            </p>
+          </div>
+        )}
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#E5E5E0] pb-6">
           <div>

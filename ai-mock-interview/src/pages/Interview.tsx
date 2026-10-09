@@ -26,7 +26,7 @@ import { useMedia } from "../context/MediaContext";
 
 import type { Interview, InterviewQuestion } from "../types/api";
 
-import { createWarningEvent, submitAnswer, uploadInterviewRecording } from "../services/api";
+import { createWarningEvent, submitAnswer, terminateInterview, uploadInterviewRecording } from "../services/api";
 
 import type {WarningEvent, WarningType} from "../types/interview";
 
@@ -217,12 +217,17 @@ function getBlobVideoDuration(blob: Blob): Promise<number> {
   });
 }
 
+const MAX_INTERVIEW_WARNINGS = 10;
+
 export default function InterviewPage() {
 
   const location = useLocation();
   const navigate = useNavigate();
   const { getToken } = useAuth();
   const { stream } = useMedia();
+
+  const warningCountRef = useRef(0);
+  const isTerminatingRef = useRef(false);
 
   const eyeMovementCountRef = useRef(0);
   const lastEyeWarningRef = useRef(0);
@@ -291,9 +296,17 @@ export default function InterviewPage() {
 
     ) => {
 
+      if (isTerminatingRef.current) {
+        return;
+      }
+
       try {
 
         const token = await getToken();
+
+        if (isTerminatingRef.current) {
+          return;
+        }
 
         if (!token || !interview.id) {
 
@@ -380,27 +393,56 @@ export default function InterviewPage() {
         );
 
         if (result.warning) {
+          const nextWarningCount = warningCountRef.current + 1;
+          warningCountRef.current = nextWarningCount;
 
           setWarnings((prev) => [
-
             ...prev,
-
             {
-
               id: result.warning.id,
-
               type: result.warning.warning_type as WarningType,
-
               timestamp: result.warning.timestamp_seconds,
-
               questionNumber: result.warning.question_number,
-
               confidence: result.warning.confidence,
-
             },
-
           ]);
 
+          if (
+            nextWarningCount >= MAX_INTERVIEW_WARNINGS &&
+            !isTerminatingRef.current
+          ) {
+            isTerminatingRef.current = true;
+
+            // Stop the recording.
+            const recorder = mediaRecorderRef.current;
+
+            if (recorder && recorder.state !== "inactive") {
+              recorder.stop();
+            }
+
+            try {
+              await terminateInterview(token, interview.id);
+            } catch (error) {
+              console.error("Failed to terminate interview:", error);
+            } finally {
+              // Exit fullscreen before returning to the dashboard.
+              if (document.fullscreenElement) {
+                try {
+                  await document.exitFullscreen();
+                } catch (error) {
+                  console.warn("Could not exit fullscreen:", error);
+                }
+              }
+
+              navigate("/dashboard", {
+                replace: true,
+                state: {
+                  terminationMessage:
+                    "Your interview has been terminated because you reached the maximum limit of 10 warnings. Please try again.",
+                },
+              });
+            }
+          }
         }
 
       } catch (error) {
@@ -418,15 +460,11 @@ export default function InterviewPage() {
     },
 
     [
-
       getToken,
-
       interview.id,
-
       currentQuestion.question_number,
-
       elapsedSeconds,
-
+      navigate,
     ]
 
   );
