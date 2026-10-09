@@ -253,9 +253,20 @@ export default function InterviewPage() {
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-  const [answer, setAnswer] = useState("");
+  const [answersMap, setAnswersMap] = useState<Record<number, string>>(() =>
+    Object.fromEntries(
+      interview.questions.map((question) => [
+        question.question_number,
+        question.answer ?? "",
+      ])
+    )
+  );
 
-  const [answersMap, setAnswersMap] = useState<Record<number, string>>({});
+  const [visitedQuestions, setVisitedQuestions] = useState<Set<number>>(
+    () => new Set([interview.questions[0]?.question_number ?? 1])
+  );
+
+  const [showReviewModal, setShowReviewModal] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -264,6 +275,16 @@ export default function InterviewPage() {
   const [warnings, setWarnings] = useState<WarningEvent[]>([]);
 
   const currentQuestion: InterviewQuestion = interview.questions[currentQuestionIndex] || interview.questions[0];
+
+  const answer = answersMap[currentQuestion.question_number] ?? "";
+
+  const answeredCount = interview.questions.filter((question) =>
+    (answersMap[question.question_number] ?? "").trim()
+  ).length;
+
+  const unansweredQuestions = interview.questions.filter((question) =>
+    !(answersMap[question.question_number] ?? "").trim()
+  );
 
   const recordWarning = useCallback(
 
@@ -773,22 +794,50 @@ export default function InterviewPage() {
 
   const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
 
-  // Keyboard shortcut Ctrl/Cmd + Enter to submit
+  const navigateToQuestion = (index: number) => {
+    const question = interview.questions[index];
+    if (!question) return;
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // When the candidate jumps over questions, mark the skipped range as
+    // visited so unanswered questions in that range appear yellow.
+    setVisitedQuestions((previous) => {
+      const next = new Set(previous);
+      const firstIndex = Math.min(currentQuestionIndex, index);
+      const lastIndex = Math.max(currentQuestionIndex, index);
 
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-
-      e.preventDefault();
-
-      if (answer.trim() && !isSubmitting) {
-
-        handleSubmit();
-
+      for (let questionIndex = firstIndex; questionIndex <= lastIndex; questionIndex += 1) {
+        const visitedQuestion = interview.questions[questionIndex];
+        if (visitedQuestion) next.add(visitedQuestion.question_number);
       }
 
+      return next;
+    });
+    setCurrentQuestionIndex(index);
+  };
+
+  const handleNextQuestion = () => {
+    if (isSubmitting) return;
+
+    if (isLastQuestion) {
+      setShowReviewModal(true);
+      return;
     }
 
+    navigateToQuestion(currentQuestionIndex + 1);
+  };
+
+  const handlePreviousQuestion = () => {
+    if (currentQuestionIndex > 0 && !isSubmitting) {
+      navigateToQuestion(currentQuestionIndex - 1);
+    }
+  };
+
+  // Ctrl/Cmd + Enter saves the draft and moves forward; it does not submit the interview.
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      handleNextQuestion();
+    }
   };
 
   const stopRecording = (): Promise<Blob | null> => {
@@ -882,124 +931,88 @@ export default function InterviewPage() {
     });
   };
 
-  const handleSubmit = async () => {
+  const handleFinalSubmit = async () => {
+    if (isSubmitting) return;
 
-    if (!answer.trim() || isSubmitting) return;
+    // This backend requires a non-empty answer for every question and completes
+    // the interview when the final numbered question is submitted.
+    const missingQuestions = interview.questions.filter(
+      (question) => !(answersMap[question.question_number] ?? "").trim()
+    );
+
+    if (missingQuestions.length > 0) {
+      setShowReviewModal(true);
+      return;
+    }
 
     setIsSubmitting(true);
 
-    const trimmedAnswer = answer.trim();
-
     try {
-
       const token = await getToken();
-
       if (!token) {
-
         throw new Error("Authentication token unavailable.");
-
       }
-
       if (!interview.id) {
-
         throw new Error("Interview ID is missing.");
-
       }
 
-      const result = await submitAnswer(
-
-        token,
-
-        interview.id,
-
-        currentQuestion.question_number,
-
-        trimmedAnswer,
-
-        isLastQuestion ? elapsedSeconds : undefined
-
+      let completedInterview: Interview | null = null;
+      const questionsInOrder = [...interview.questions].sort(
+        (left, right) => left.question_number - right.question_number
       );
 
-      const updatedAnswers = {
+      // Save all answers in question order. The final question is submitted last
+      // so the backend only completes the interview after explicit confirmation.
+      for (const question of questionsInOrder) {
+        const finalQuestionAnswer = (answersMap[question.question_number] ?? "").trim();
+        const result = await submitAnswer(
+          token,
+          interview.id,
+          question.question_number,
+          finalQuestionAnswer,
+          question.question_number === totalQuestions ? elapsedSeconds : undefined
+        );
 
-        ...answersMap,
-
-        [currentQuestion.question_number]: trimmedAnswer,
-
-      };
-
-      setAnswersMap(updatedAnswers);
-
-      if (isLastQuestion) {
-
-        if (!result.interview) {
-
-          throw new Error(
-
-            "Completed interview data was not returned."
-
-          );
-
+        if (question.question_number === totalQuestions) {
+          if (!result.interview) {
+            throw new Error("Completed interview data was not returned.");
+          }
+          completedInterview = result.interview as Interview;
         }
-
-        const recordingBlob = await stopRecording();
-
-        let finalInterview = result.interview;
-
-        if (recordingBlob) {
-
-          finalInterview = await uploadInterviewRecording(
-
-            token,
-
-            interview.id,
-
-            recordingBlob
-
-          );
-
-        }
-
-        navigate("/interview/report", {
-
-          state: {
-
-            interview: finalInterview,
-
-            totalDuration: elapsedSeconds,
-
-          },
-
-        });
-
-        return;
-
       }
 
-      setCurrentQuestionIndex((prev) => prev + 1);
+      if (!completedInterview) {
+        throw new Error("The interview could not be completed. Please try again.");
+      }
 
-      setAnswer("");
+      const recordingBlob = await stopRecording();
+      let finalInterview = completedInterview;
 
+      if (recordingBlob) {
+        finalInterview = await uploadInterviewRecording(
+          token,
+          interview.id,
+          recordingBlob
+        );
+      }
+
+      setShowReviewModal(false);
+      navigate("/interview/report", {
+        state: {
+          interview: finalInterview,
+          totalDuration: elapsedSeconds,
+        },
+      });
     } catch (error) {
-
-      console.error("Failed to save answer:", error);
-
+      console.error("Failed to submit interview:", error);
       window.alert(
-
         error instanceof Error
-
           ? error.message
-
-          : "Failed to save your answer. Please try again."
-
+          : "Failed to submit the interview. Please try again."
       );
-
     } finally {
-
       setIsSubmitting(false);
-
     }
-
   };
 
   const wordCount = answer.trim() ? answer.trim().split(/\s+/).length : 0;
@@ -1334,7 +1347,12 @@ export default function InterviewPage() {
 
                 value={answer}
 
-                onChange={(e) => setAnswer(e.target.value)}
+                onChange={(e) =>
+                  setAnswersMap((previous) => ({
+                    ...previous,
+                    [currentQuestion.question_number]: e.target.value,
+                  }))
+                }
 
                 onKeyDown={handleKeyDown}
 
@@ -1348,7 +1366,7 @@ export default function InterviewPage() {
 
                 <span>
 
-                  Shortcut: <kbd className="rounded border border-border-base bg-canvas px-1.5 py-0.5 text-[11px] font-mono text-text-primary">Ctrl</kbd> + <kbd className="rounded border border-border-base bg-canvas px-1.5 py-0.5 text-[11px] font-mono text-text-primary">Enter</kbd> to submit
+                  Shortcut: <kbd className="rounded border border-border-base bg-canvas px-1.5 py-0.5 text-[11px] font-mono text-text-primary">Ctrl</kbd> + <kbd className="rounded border border-border-base bg-canvas px-1.5 py-0.5 text-[11px] font-mono text-text-primary">Enter</kbd> to continue
 
                 </span>
 
@@ -1356,70 +1374,127 @@ export default function InterviewPage() {
 
             </div>
 
-            {/* Submission Footer */}
-
-            <div className="mt-8 flex items-center justify-between border-t border-border-base pt-5">
-
-              <button
-
-                type="button"
-
-                onClick={() => setAnswer("")}
-
-                disabled={!answer}
-
-                className="text-xs font-medium text-text-muted hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed"
-
-              >
-
-                Clear text
-
-              </button>
-
-              <div className="flex items-center gap-3">
-
-                <button
-
-                  type="button"
-
-                  onClick={handleSubmit}
-
-                  disabled={!answer.trim() || isSubmitting}
-
-                  className="inline-flex items-center gap-2 rounded-md bg-teal-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-teal-hover disabled:cursor-not-allowed disabled:bg-border-strong disabled:text-text-tertiary"
-
-                >
-
-                  {isSubmitting ? (
-
-                    "Saving response..."
-
-                  ) : isLastQuestion ? (
-
-                    <>
-
-                      <span>Complete & Review Report</span>
-
-                      <CheckCircle2 className="h-4 w-4" />
-
-                    </>
-
-                  ) : (
-
-                    <>
-
-                      <span>Submit & Next Question</span>
-
-                      <ChevronRight className="h-4 w-4" />
-
-                    </>
-
-                  )}
-
-                </button>
-
+            {/* Question Navigator */}
+            <div className="mt-8 border-t border-border-base pt-5">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-xs font-semibold text-text-primary">
+                    Question Navigator
+                  </h2>
+                  <p className="mt-1 text-[11px] text-text-secondary">
+                    Select any number to revisit a question. Your typed answers are kept.
+                  </p>
+                </div>
+                <span className="mt-1 text-xs font-medium text-text-secondary sm:mt-0">
+                  {answeredCount} of {totalQuestions} answered
+                </span>
               </div>
 
+              <div className="mt-4 flex flex-wrap gap-2">
+                {interview.questions.map((question, index) => {
+                  const hasAnswer = Boolean(
+                    (answersMap[question.question_number] ?? "").trim()
+                  );
+                  const wasVisited = visitedQuestions.has(question.question_number);
+                  const isCurrent = index === currentQuestionIndex;
+                  const statusLabel = hasAnswer
+                    ? "answered"
+                    : wasVisited
+                      ? "visited, unanswered"
+                      : "not visited";
+
+                  return (
+                    <button
+                      key={question.id}
+                      type="button"
+                      onClick={() => navigateToQuestion(index)}
+                      disabled={isSubmitting}
+                      aria-label={`Go to question ${question.question_number}, ${statusLabel}`}
+                      aria-current={isCurrent ? "step" : undefined}
+                      title={`Question ${question.question_number}: ${statusLabel}`}
+                      className={`flex h-9 w-9 items-center justify-center rounded-lg border text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                        hasAnswer
+                          ? "border-emerald-300 bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                          : wasVisited
+                            ? "border-amber-300 bg-amber-100 text-amber-900 hover:bg-amber-200"
+                            : "border-border-base bg-white text-text-secondary hover:bg-canvas"
+                      } ${
+                        isCurrent
+                          ? "ring-2 ring-primary ring-offset-2"
+                          : ""
+                      }`}
+                    >
+                      {question.question_number}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-text-secondary">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-sm bg-emerald-200 ring-1 ring-emerald-300" />
+                  Answered
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-sm bg-amber-200 ring-1 ring-amber-300" />
+                  Visited, unanswered
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-sm bg-white ring-1 ring-border-base" />
+                  Not visited
+                </span>
+              </div>
+            </div>
+
+            {/* Navigation Footer */}
+            <div className="mt-6 flex flex-col gap-4 border-t border-border-base pt-5 sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                onClick={() =>
+                  setAnswersMap((previous) => ({
+                    ...previous,
+                    [currentQuestion.question_number]: "",
+                  }))
+                }
+                disabled={!answer || isSubmitting}
+                className="self-start text-xs font-medium text-text-muted hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                Clear text
+              </button>
+
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={handlePreviousQuestion}
+                  disabled={currentQuestionIndex === 0 || isSubmitting}
+                  className="inline-flex items-center gap-2 rounded-md border border-border-base bg-white px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Previous
+                </button>
+
+                {isLastQuestion ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowReviewModal(true)}
+                    disabled={isSubmitting}
+                    className="inline-flex items-center gap-2 rounded-md bg-teal-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-teal-hover disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Review & Submit Interview
+                    <CheckCircle2 className="h-4 w-4" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleNextQuestion}
+                    disabled={isSubmitting}
+                    className="inline-flex items-center gap-2 rounded-md bg-teal-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-teal-hover disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Next Question
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
 
           </section>
@@ -1427,6 +1502,113 @@ export default function InterviewPage() {
         </div>
 
       </main>
+
+      {showReviewModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !isSubmitting) {
+              setShowReviewModal(false);
+            }
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="interview-review-title"
+            className="w-full max-w-lg rounded-2xl border border-border-base bg-white p-6 shadow-xl"
+          >
+            <h2
+              id="interview-review-title"
+              className="text-lg font-semibold text-text-primary"
+            >
+              {unansweredQuestions.length > 0
+                ? "You still have unanswered questions"
+                : "Review before submitting"}
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-text-secondary">
+              You have answered <strong>{answeredCount} of {totalQuestions}</strong> questions.
+              {unansweredQuestions.length > 0
+                ? " Please complete the questions below before submitting your interview."
+                : " Have you checked all your answers? Select Yes to submit your interview."}
+            </p>
+
+            {unansweredQuestions.length > 0 ? (
+              <>
+                <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4">
+                  <p className="text-sm font-semibold text-amber-900">
+                    Not answered yet
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {unansweredQuestions.map((question) => {
+                      const index = interview.questions.findIndex(
+                        (item) => item.question_number === question.question_number
+                      );
+                      return (
+                        <button
+                          key={question.id}
+                          type="button"
+                          onClick={() => {
+                            setShowReviewModal(false);
+                            navigateToQuestion(index);
+                          }}
+                          className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100"
+                        >
+                          Question {question.question_number}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="mt-6 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowReviewModal(false)}
+                    className="rounded-lg border border-border-base px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-canvas"
+                  >
+                    Keep reviewing
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const firstMissingIndex = interview.questions.findIndex(
+                        (question) => !(answersMap[question.question_number] ?? "").trim()
+                      );
+                      setShowReviewModal(false);
+                      if (firstMissingIndex >= 0) navigateToQuestion(firstMissingIndex);
+                    }}
+                    className="rounded-lg bg-teal-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-teal-hover"
+                  >
+                    Answer missing questions
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowReviewModal(false)}
+                  disabled={isSubmitting}
+                  className="rounded-lg border border-border-base px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-canvas disabled:opacity-60"
+                >
+                  No, review again
+                </button>
+                <button
+                  type="button"
+                  onClick={handleFinalSubmit}
+                  disabled={isSubmitting}
+                  className="rounded-lg bg-teal-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-hover disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isSubmitting ? "Submitting interview..." : "Yes, submit interview"}
+                </button>
+              </div>
+            )}
+          </section>
+        </div>
+      )}
 
     </div>
 
