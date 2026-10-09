@@ -263,6 +263,12 @@ export default function InterviewPage() {
 
   const [warnings, setWarnings] = useState<WarningEvent[]>([]);
 
+  const [isInFullscreen, setIsInFullscreen] = useState(() => typeof document !== "undefined" && Boolean(document.fullscreenElement));
+
+  const [showFullscreenWarning, setShowFullscreenWarning] = useState(false);
+
+  const [fullscreenError, setFullscreenError] = useState("");
+
   const currentQuestion: InterviewQuestion = interview.questions[currentQuestionIndex] || interview.questions[0];
 
   const answer = answersMap[currentQuestion.question_number] ?? "";
@@ -425,6 +431,23 @@ export default function InterviewPage() {
 
   );
 
+  const handleReturnToFullscreen = async () => {
+    try {
+      setFullscreenError("");
+
+      await document.documentElement.requestFullscreen();
+
+      setIsInFullscreen(true);
+      setShowFullscreenWarning(false);
+    } catch (error) {
+      console.error("Could not restore fullscreen:", error);
+
+      setFullscreenError(
+        "Fullscreen could not be restored. Please click the button again or check your browser settings."
+      );
+    }
+  };
+
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState !== "hidden") {
@@ -444,11 +467,18 @@ export default function InterviewPage() {
     };
 
     const handleFullscreenChange = () => {
-      if (document.fullscreenElement) {
+      const fullscreenActive = Boolean(document.fullscreenElement);
+
+      setIsInFullscreen(fullscreenActive);
+
+      if (fullscreenActive) {
+        setShowFullscreenWarning(false);
+        setFullscreenError("");
         return;
       }
 
-      // Allow a tab-switch event to be detected first.
+      setShowFullscreenWarning(true);
+
       window.setTimeout(() => {
         if (document.visibilityState === "hidden") {
           return;
@@ -461,7 +491,6 @@ export default function InterviewPage() {
         }
 
         lastFullscreenExitWarningRef.current = now;
-
         void recordWarning("fullscreen_exit");
       }, 300);
     };
@@ -1074,6 +1103,43 @@ export default function InterviewPage() {
   return (
 
     <div className="min-h-[calc(100vh-3.5rem)] bg-canvas text-text-primary">
+
+      {showFullscreenWarning && !isInFullscreen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4">
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="fullscreen-warning-title"
+            className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+          >
+            <h2
+              id="fullscreen-warning-title"
+              className="text-lg font-semibold text-gray-900"
+            >
+              Fullscreen Required
+            </h2>
+
+            <p className="mt-3 text-sm text-gray-600">
+              You exited fullscreen mode. Return to fullscreen to
+              continue your interview.
+            </p>
+
+            {fullscreenError && (
+              <p role="alert" className="mt-3 text-sm text-red-600">
+                {fullscreenError}
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={handleReturnToFullscreen}
+              className="mt-5 w-full rounded-md bg-teal-700 px-4 py-3 text-sm font-medium text-white hover:bg-teal-800"
+            >
+              Return to Fullscreen
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Distraction-free top utility bar */}
 
