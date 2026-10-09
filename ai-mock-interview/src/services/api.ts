@@ -6,6 +6,8 @@ import type {
   InterviewSetup,
 } from "../types/interview";
 
+import type { WarningType } from "../types/interview";
+
 const API_BASE_URL =
   "http://127.0.0.1:8000/api";
 
@@ -131,10 +133,7 @@ export async function terminateInterview(
 export async function createWarningEvent(
   token: string,
   interviewId: number,
-  warningType:
-    | "lip_movement"
-    | "eye_movement"
-    | "smart_device",
+  warningType: WarningType,
   questionNumber: number,
   timestampSeconds: number,
   confidence?: number,

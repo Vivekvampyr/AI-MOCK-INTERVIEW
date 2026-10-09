@@ -121,6 +121,8 @@ class WarningEvent(models.Model):
         ("lip_movement", "Lip Movement"),
         ("eye_movement", "Eye Movement"),
         ("smart_device", "Smart Device"),
+        ("tab_switch", "Tab Switch"),
+        ("fullscreen_exit", "Fullscreen Exited"),
     ]
 
     interview = models.ForeignKey(

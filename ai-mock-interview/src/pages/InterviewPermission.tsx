@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import {
   Camera,
@@ -22,6 +22,7 @@ export default function InterviewPermission() {
   const navigate = useNavigate();
   const location = useLocation();
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [fullscreenError, setFullscreenError] = useState("");
 
   const {
     stream,
@@ -49,17 +50,36 @@ export default function InterviewPermission() {
     videoRef.current.srcObject = stream;
   }, [stream]);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!isReady) {
       return;
     }
 
-    navigate("/interview", {
-      state: {
-        setup: state?.setup,
-        interview: state?.interview,
-      },
-    });
+    setFullscreenError("");
+
+    try {
+      if (!document.fullscreenElement) {
+        const root = document.documentElement;
+
+        if (typeof root.requestFullscreen !== "function") {
+          throw new Error("Fullscreen is not supported.");
+        }
+
+        await root.requestFullscreen();
+      }
+
+      navigate("/interview", {
+        state: {
+          setup: state?.setup,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to enter fullscreen:", error);
+
+      setFullscreenError(
+        "Could not enable fullscreen. Please allow fullscreen access and click Continue to Interview again."
+      );
+    }
   };
 
   if (!state?.setup) {
@@ -209,6 +229,14 @@ export default function InterviewPermission() {
             </div>
 
             <div className="mt-8 space-y-4">
+              {fullscreenError && (
+                <div
+                  role="alert"
+                  className="mt-6 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                >
+                  {fullscreenError}
+                </div>
+              )}
               {!isReady ? (
                 <button
                   type="button"

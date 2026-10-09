@@ -12,7 +12,9 @@ export interface InterviewSetup {
 export type WarningType =
   | "lip_movement"
   | "eye_movement"
-  | "smart_device";
+  | "smart_device"
+  | "tab_switch"
+  | "fullscreen_exit";
 
 export interface WarningEvent {
   id: number;
