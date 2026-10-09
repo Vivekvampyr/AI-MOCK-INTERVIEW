@@ -20,12 +20,12 @@ export default function Home() {
           </div>
 
           <h1 className="mt-5 font-serif text-3xl sm:text-5xl font-medium tracking-tight text-[#1A1A1A] leading-[1.15]">
-            Practice technical interviews for your target role and get specific feedback on every answer.
+            {/* Practice technical interviews for your target role and get specific feedback on every answer. */}
+            AI Mock Interviews for Engineers
           </h1>
 
           <p className="mt-5 max-w-2xl text-base sm:text-lg leading-relaxed text-[#6B6B6B]">
-            Simulate engineering interviews with realistic technical prompts, timed sessions,
-            and actionable breakdowns of your architectural depth, communication clarity, and trade-off coverage.
+            Practice technical interviews for your target role and get specific feedback on every answer.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -181,7 +181,7 @@ export default function Home() {
               </span>
               <div>
                 <h3 className="text-base font-semibold text-[#1A1A1A]">
-                  Select your seniority and focus technologies
+                  Select your years of experience and tech stack
                 </h3>
                 <p className="mt-1 text-sm leading-relaxed text-[#6B6B6B]">
                   Choose from Fresher, Early Career, Mid-Level, or Senior Staff.
@@ -196,7 +196,7 @@ export default function Home() {
               </span>
               <div>
                 <h3 className="text-base font-semibold text-[#1A1A1A]">
-                  Answer timed technical questions via text or voice
+                  Answer timed technical questions
                 </h3>
                 <p className="mt-1 text-sm leading-relaxed text-[#6B6B6B]">
                   Respond under realistic time pacing with your camera active.
@@ -314,7 +314,7 @@ export default function Home() {
             <span className="flex h-5 w-5 items-center justify-center rounded bg-[#0F5C5C] text-[10px] font-bold text-white">
               IC
             </span>
-            <span className="font-semibold text-[#1A1A1A]">InterviewCraft</span>
+            <span className="font-semibold text-[#1A1A1A]">AI Mock Interview</span>
             <span className="text-[#8C8C88]">· Focused Technical Practice</span>
           </div>
 

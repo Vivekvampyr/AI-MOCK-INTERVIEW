@@ -351,8 +351,14 @@ export default function InterviewReport() {
                     warning.warning_type === "eye_movement"
                       ? "Eye Movement"
                       : warning.warning_type === "lip_movement"
-                      ? "Lip Movement"
-                      : "Smart Device";
+                        ? "Lip Movement"
+                        : warning.warning_type === "smart_device"
+                          ? "Smart Device Detected"
+                          : warning.warning_type === "tab_switch"
+                            ? "Tab Switch Detected"
+                            : warning.warning_type === "fullscreen_exit"
+                              ? "Fullscreen Exited"
+                              : "Unknown Warning";
 
                   const minutes = Math.floor(
                     warning.timestamp_seconds / 60

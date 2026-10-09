@@ -31,7 +31,7 @@ export default function Navbar() {
             <span className="flex h-6 w-6 items-center justify-center rounded-[5px] bg-[#0F5C5C] text-[11px] font-semibold text-white">
               IC
             </span>
-            <span>InterviewCraft</span>
+            <span>AI Mock Interview</span>
           </Link>
 
           <Show when="signed-in">
