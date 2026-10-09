@@ -86,7 +86,9 @@ class StartInterviewView(APIView):
                 interview.status = "ready"
                 interview.save(
                     update_fields=[
+                        "current_question",
                         "status",
+                        "duration_seconds",
                         "updated_at",
                     ]
                 )

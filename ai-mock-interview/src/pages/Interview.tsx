@@ -85,6 +85,7 @@ const fallbackInterview: Interview = {
   ],
   warnings: [],
   recording: "",
+  duration_seconds: null,
 };
 
 export default function InterviewPage() {

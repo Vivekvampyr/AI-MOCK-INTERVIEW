@@ -27,6 +27,23 @@ interface SessionRecord {
   interview: Interview;
 }
 
+function formatDuration(seconds: number | null): string {
+  if (seconds == null || seconds < 0) {
+    return "—";
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  if (minutes === 0) {
+    return `${remainingSeconds}s`;
+  }
+
+  return remainingSeconds === 0
+    ? `${minutes}m`
+    : `${minutes}m ${remainingSeconds}s`;
+}
+
 
 export default function Dashboard() {
   const { user } = useUser();
@@ -84,7 +101,7 @@ export default function Dashboard() {
                 year: "numeric",
               }
             ),
-            duration: "—",
+            duration: formatDuration(interview.duration_seconds),
             score: interview.total_score ?? 0,
             status:
               interview.status === "completed"

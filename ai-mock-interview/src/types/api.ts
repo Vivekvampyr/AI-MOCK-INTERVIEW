@@ -23,6 +23,7 @@ export interface Interview {
   questions: InterviewQuestion[];
   warnings: InterviewWarning[];
   recording: string | null;
+  duration_seconds: number | null;
 }
 
 export interface InterviewWarning {
