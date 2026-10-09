@@ -337,6 +337,8 @@ class CreateWarningEventView(APIView):
             "lip_movement",
             "eye_movement",
             "smart_device",
+            "tab_switch",
+            "fullscreen_exit",
         ]
 
         if warning_type not in allowed_types:

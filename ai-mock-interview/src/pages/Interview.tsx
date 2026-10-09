@@ -220,35 +220,24 @@ function getBlobVideoDuration(blob: Blob): Promise<number> {
 export default function InterviewPage() {
 
   const location = useLocation();
-
   const navigate = useNavigate();
-
   const { getToken } = useAuth();
-
   const { stream } = useMedia();
 
   const eyeMovementCountRef = useRef(0);
-
   const lastEyeWarningRef = useRef(0);
-
   const lipMovementCountRef = useRef(0);
-
   const lastLipWarningRef = useRef(0);
-
-  // const smartDeviceCountRef = useRef(0);
-
   const lastSmartDeviceWarningRef = useRef(0);
-
+  const lastTabSwitchWarningRef = useRef(0);
+  const lastFullscreenExitWarningRef = useRef(0);
+  
   const videoRef = useRef<HTMLVideoElement | null>(null);
-
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-
   const recordedChunksRef = useRef<Blob[]>([]);
-
   const recordingStartTimeRef = useRef<number>(0);
 
   const state = location.state as LocationState | null;
-
   const interview = state?.interview || fallbackInterview;
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -435,6 +424,71 @@ export default function InterviewPage() {
     ]
 
   );
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== "hidden") {
+        return;
+      }
+
+      const now = Date.now();
+
+      // Prevent duplicate warnings for rapid events.
+      if (now - lastTabSwitchWarningRef.current < 1500) {
+        return;
+      }
+
+      lastTabSwitchWarningRef.current = now;
+
+      void recordWarning("tab_switch");
+    };
+
+    const handleFullscreenChange = () => {
+      if (document.fullscreenElement) {
+        return;
+      }
+
+      // Allow a tab-switch event to be detected first.
+      window.setTimeout(() => {
+        if (document.visibilityState === "hidden") {
+          return;
+        }
+
+        const now = Date.now();
+
+        if (now - lastFullscreenExitWarningRef.current < 1500) {
+          return;
+        }
+
+        lastFullscreenExitWarningRef.current = now;
+
+        void recordWarning("fullscreen_exit");
+      }, 300);
+    };
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
+
+    document.addEventListener(
+      "fullscreenchange",
+      handleFullscreenChange
+    );
+
+    return () => {
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
+
+      document.removeEventListener(
+        "fullscreenchange",
+        handleFullscreenChange
+      );
+    };
+  }, [recordWarning]);
+  
 
   useEffect(() => {
 
@@ -1174,14 +1228,14 @@ export default function InterviewPage() {
                     <p className="mt-1 text-[11px] text-text-secondary">
 
                       {warnings[warnings.length - 1].type === "eye_movement"
-
                         ? "Please keep your eyes focused on the interview screen."
-
                         : warnings[warnings.length - 1].type === "lip_movement"
-
-                        ? "Unusual lip movement detected."
-
-                        : "Smart device detected."}
+                          ? "Unusual lip movement detected."
+                          : warnings[warnings.length - 1].type === "smart_device"
+                            ? "Smart device detected."
+                            : warnings[warnings.length - 1].type === "tab_switch"
+                              ? "Tab switching detected. Please return to the interview."
+                              : "Fullscreen exited. Please return to fullscreen."}
 
                     </p>
 

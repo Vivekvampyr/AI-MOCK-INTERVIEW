@@ -71,6 +71,7 @@ export default function InterviewPermission() {
       navigate("/interview", {
         state: {
           setup: state?.setup,
+          interview: state?.interview,
         },
       });
     } catch (error) {
