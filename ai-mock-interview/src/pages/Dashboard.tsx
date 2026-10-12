@@ -57,12 +57,20 @@ export default function Dashboard() {
 
   
 
+  const [isSetupOpen, setIsSetupOpen] = useState(false);
+  const [isStartingInterview, setIsStartingInterview] = useState(false);
+  const [setupError, setSetupError] = useState<string | null>(null);
+  const [sessions, setSessions] = useState<SessionRecord[]>([]);
+
   const handleInterviewSetup = async (setup: InterviewSetup) => {
+    setIsStartingInterview(true);
+    setSetupError(null);
+
     try {
       const token = await getToken();
 
       if (!token) {
-        throw new Error("Authentication token unavailable.");
+        throw new Error("Authentication token unavailable. Please sign in again.");
       }
 
       const interview = await startInterview(token, setup);
@@ -77,11 +85,15 @@ export default function Dashboard() {
       });
     } catch (error) {
       console.error("Failed to start interview:", error);
+      setSetupError(
+        error instanceof Error
+          ? error.message
+          : "Failed to generate interview questions. Please try again."
+      );
+    } finally {
+      setIsStartingInterview(false);
     }
   };
-
-  const [isSetupOpen, setIsSetupOpen] = useState(false);
-  const [sessions, setSessions] = useState<SessionRecord[]>([]);
 
   useEffect(() => {
     const loadInterviews = async () => {
@@ -573,8 +585,15 @@ export default function Dashboard() {
 
       <InterviewSetupModal
         isOpen={isSetupOpen}
-        onClose={() => setIsSetupOpen(false)}
+        onClose={() => {
+          if (!isStartingInterview) {
+            setIsSetupOpen(false);
+            setSetupError(null);
+          }
+        }}
         onContinue={handleInterviewSetup}
+        isLoading={isStartingInterview}
+        error={setupError}
       />
     </div>
   );

@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { X, Check } from "lucide-react";
+import { X, Check, AlertCircle, Loader2 } from "lucide-react";
 import type { ExperienceLevel, InterviewSetup } from "../types/interview";
 
 interface InterviewSetupModalProps {
   isOpen: boolean;
   onClose: () => void;
   onContinue: (setup: InterviewSetup) => void;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
 const experienceOptions: {
@@ -51,6 +53,8 @@ export default function InterviewSetupModal({
   isOpen,
   onClose,
   onContinue,
+  isLoading = false,
+  error = null,
 }: InterviewSetupModalProps) {
   const [experience, setExperience] = useState<ExperienceLevel>("3-5");
   const [techStack, setTechStack] = useState<string[]>(["React", "TypeScript"]);
@@ -186,6 +190,16 @@ export default function InterviewSetupModal({
               Select at least one technology to continue.
             </p>
           )}
+
+          {error && (
+            <div className="mt-3 flex items-start gap-2 rounded-lg border border-[#F5C2C7] bg-[#F8D7DA]/60 p-3 text-xs text-[#842029]">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#842029]" />
+              <div>
+                <p className="font-semibold">Unable to start interview</p>
+                <p className="mt-0.5">{error}</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -193,7 +207,8 @@ export default function InterviewSetupModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-[#E5E5E0] bg-white px-3.5 py-2 text-xs font-medium text-[#1A1A1A] hover:bg-[#F5F5F2]"
+            disabled={isLoading}
+            className="rounded-md border border-[#E5E5E0] bg-white px-3.5 py-2 text-xs font-medium text-[#1A1A1A] hover:bg-[#F5F5F2] disabled:opacity-50"
           >
             Cancel
           </button>
@@ -201,10 +216,13 @@ export default function InterviewSetupModal({
           <button
             type="button"
             onClick={handleContinue}
-            disabled={techStack.length === 0}
-            className="rounded-md bg-[#0F5C5C] px-4 py-2 text-xs font-medium text-white hover:bg-[#0A4444] disabled:bg-[#D1D1CB] disabled:text-[#8C8C88]"
+            disabled={techStack.length === 0 || isLoading}
+            className="inline-flex items-center gap-2 rounded-md bg-[#0F5C5C] px-4 py-2 text-xs font-medium text-white hover:bg-[#0A4444] disabled:bg-[#D1D1CB] disabled:text-[#8C8C88] transition"
           >
-            Proceed to Device Check
+            {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            <span>
+              {isLoading ? "Generating Questions with AI..." : "Proceed to Device Check"}
+            </span>
           </button>
         </div>
       </div>
