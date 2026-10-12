@@ -1144,51 +1144,37 @@ export default function InterviewPage() {
 
       {/* Distraction-free top utility bar */}
 
-      <header className="border-b border-border-base bg-white px-4 py-3 sm:px-6">
+      <header className="border-b border-border-base bg-white px-3 py-2.5 sm:px-6 sm:py-3">
 
         <div className="mx-auto flex max-w-6xl items-center justify-between">
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
 
             <button
-
               type="button"
-
               onClick={() => {
-
                 if (window.confirm("Leave this interview session? Your progress will be discarded.")) {
-
                   navigate("/dashboard");
-
                 }
-
               }}
-
               className="flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-text-primary"
-
               aria-label="Exit interview"
-
             >
-
               <ArrowLeft className="h-3.5 w-3.5" />
-
-              <span>Exit session</span>
-
+              <span>Exit</span>
             </button>
 
-            <span className="text-border-base">|</span>
+            <span className="hidden sm:inline text-border-base">|</span>
 
-            <span className="text-xs font-medium text-text-secondary">
-
+            <span className="hidden sm:inline text-xs font-medium text-text-secondary truncate max-w-[200px] md:max-w-none">
               {interview.tech_stack.join(", ")} · {interview.experience} yrs
-
             </span>
 
           </div>
 
           {/* Quiet Timer & Progress */}
 
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-3 sm:gap-5">
 
             <div className="flex items-center gap-1.5 text-xs font-mono font-medium text-text-secondary">
 
@@ -1198,26 +1184,19 @@ export default function InterviewPage() {
 
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
 
               <span className="text-xs font-medium text-text-primary">
-
-                Question {currentQuestionIndex + 1} of {totalQuestions}
-
+                Q {currentQuestionIndex + 1}/{totalQuestions}
               </span>
 
-              <div className="h-1.5 w-20 overflow-hidden rounded-full bg-border-base">
+              <div className="h-1.5 w-14 sm:w-20 overflow-hidden rounded-full bg-border-base">
 
                 <div
-
                   className="h-full bg-primary transition-all duration-200"
-
                   style={{
-
                     width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%`,
-
                   }}
-
                 />
 
               </div>
@@ -1232,7 +1211,7 @@ export default function InterviewPage() {
 
       {/* Main Workspace */}
 
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+      <main className="mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-8">
 
         <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
 
@@ -1360,9 +1339,9 @@ export default function InterviewPage() {
 
             </div>
 
-            {/* Quiet Tips / Checklist */}
+            {/* Quiet Tips / Checklist - hidden on mobile to maximize viewport */}
 
-            <div className="rounded-xl border border-border-base bg-white p-4 text-xs text-text-secondary">
+            <div className="hidden lg:block rounded-xl border border-border-base bg-white p-4 text-xs text-text-secondary">
 
               <h3 className="font-medium text-text-primary">Response Guidelines</h3>
 
@@ -1400,7 +1379,7 @@ export default function InterviewPage() {
 
           {/* Right Column: Question & Answer Workspace */}
 
-          <section className="flex flex-col rounded-xl border border-border-base bg-white p-6 shadow-subtle sm:p-8">
+          <section className="flex flex-col rounded-xl border border-border-base bg-white p-4 sm:p-8 shadow-subtle">
 
             {/* Question Header */}
 
@@ -1422,7 +1401,7 @@ export default function InterviewPage() {
 
               </div>
 
-              <h1 className="mt-2 text-xl sm:text-2xl font-semibold leading-snug tracking-tight text-text-primary">
+              <h1 className="mt-2 text-lg sm:text-2xl font-semibold leading-snug tracking-tight text-text-primary">
 
                 {currentQuestion.question}
 
@@ -1432,7 +1411,7 @@ export default function InterviewPage() {
 
             {/* Answer Input Area */}
 
-            <div className="mt-6 flex-1 flex flex-col">
+            <div className="mt-5 sm:mt-6 flex-1 flex flex-col">
 
               <div className="flex items-center justify-between pb-2">
 
@@ -1464,7 +1443,7 @@ export default function InterviewPage() {
 
                 id="interview-answer"
 
-                rows={9}
+                rows={6}
 
                 value={answer}
 
@@ -1479,13 +1458,13 @@ export default function InterviewPage() {
 
                 placeholder="Type your structured response here, detailing implementation details, architectural choices, and why you made them..."
 
-                className="w-full flex-1 rounded-lg border border-border-base bg-canvas p-4 text-sm leading-relaxed text-text-primary placeholder:text-text-tertiary focus:border-primary focus:bg-white focus:outline-none"
+                className="w-full flex-1 min-h-[140px] sm:min-h-[200px] rounded-lg border border-border-base bg-canvas p-3 sm:p-4 text-sm leading-relaxed text-text-primary placeholder:text-text-tertiary focus:border-primary focus:bg-white focus:outline-none"
 
               />
 
-              <div className="mt-3 flex items-center justify-between text-xs text-text-tertiary">
+              <div className="mt-2.5 sm:mt-3 flex items-center justify-between text-xs text-text-tertiary">
 
-                <span>
+                <span className="hidden sm:inline">
 
                   Shortcut: <kbd className="rounded border border-border-base bg-canvas px-1.5 py-0.5 text-[11px] font-mono text-text-primary">Ctrl</kbd> + <kbd className="rounded border border-border-base bg-canvas px-1.5 py-0.5 text-[11px] font-mono text-text-primary">Enter</kbd> to continue
 
@@ -1496,13 +1475,13 @@ export default function InterviewPage() {
             </div>
 
             {/* Question Navigator */}
-            <div className="mt-8 border-t border-border-base pt-5">
+            <div className="mt-6 sm:mt-8 border-t border-border-base pt-4 sm:pt-5">
               <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-xs font-semibold text-text-primary">
                     Question Navigator
                   </h2>
-                  <p className="mt-1 text-[11px] text-text-secondary">
+                  <p className="mt-0.5 sm:mt-1 text-[11px] text-text-secondary">
                     Select any number to revisit a question. Your typed answers are kept.
                   </p>
                 </div>
@@ -1511,7 +1490,7 @@ export default function InterviewPage() {
                 </span>
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-3 sm:mt-4 flex flex-wrap gap-1.5 sm:gap-2">
                 {interview.questions.map((question, index) => {
                   const hasAnswer = Boolean(
                     (answersMap[question.question_number] ?? "").trim()
@@ -1533,7 +1512,7 @@ export default function InterviewPage() {
                       aria-label={`Go to question ${question.question_number}, ${statusLabel}`}
                       aria-current={isCurrent ? "step" : undefined}
                       title={`Question ${question.question_number}: ${statusLabel}`}
-                      className={`flex h-9 w-9 items-center justify-center rounded-lg border text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                      className={`flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg border text-xs sm:text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                         hasAnswer
                           ? "border-emerald-300 bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
                           : wasVisited
@@ -1551,24 +1530,24 @@ export default function InterviewPage() {
                 })}
               </div>
 
-              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-text-secondary">
+              <div className="mt-2.5 sm:mt-3 flex flex-wrap gap-x-3 sm:gap-x-4 gap-y-1 text-[11px] text-text-secondary">
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-sm bg-emerald-200 ring-1 ring-emerald-300" />
+                  <span className="h-2 w-2 rounded-sm bg-emerald-200 ring-1 ring-emerald-300" />
                   Answered
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-sm bg-amber-200 ring-1 ring-amber-300" />
+                  <span className="h-2 w-2 rounded-sm bg-amber-200 ring-1 ring-amber-300" />
                   Visited, unanswered
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-sm bg-white ring-1 ring-border-base" />
+                  <span className="h-2 w-2 rounded-sm bg-white ring-1 ring-border-base" />
                   Not visited
                 </span>
               </div>
             </div>
 
             {/* Navigation Footer */}
-            <div className="mt-6 flex flex-col gap-4 border-t border-border-base pt-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mt-5 sm:mt-6 flex flex-col gap-3 sm:gap-4 border-t border-border-base pt-4 sm:pt-5 sm:flex-row sm:items-center sm:justify-between">
               <button
                 type="button"
                 onClick={() =>
@@ -1583,14 +1562,14 @@ export default function InterviewPage() {
                 Clear text
               </button>
 
-              <div className="flex flex-wrap items-center justify-end gap-3">
+              <div className="grid grid-cols-2 gap-2.5 sm:flex sm:items-center sm:justify-end sm:gap-3">
                 <button
                   type="button"
                   onClick={handlePreviousQuestion}
                   disabled={currentQuestionIndex === 0 || isSubmitting}
-                  className="inline-flex items-center gap-2 rounded-md border border-border-base bg-white px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-md border border-border-base bg-white px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium text-text-primary hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <ArrowLeft className="h-4 w-4" />
+                  <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   Previous
                 </button>
 
@@ -1599,20 +1578,20 @@ export default function InterviewPage() {
                     type="button"
                     onClick={() => setShowReviewModal(true)}
                     disabled={isSubmitting}
-                    className="inline-flex items-center gap-2 rounded-md bg-teal-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-teal-hover disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-md bg-teal-accent px-3 sm:px-5 py-2.5 text-xs sm:text-sm font-medium text-white hover:bg-teal-hover disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    Review & Submit Interview
-                    <CheckCircle2 className="h-4 w-4" />
+                    <span>Submit</span>
+                    <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={handleNextQuestion}
                     disabled={isSubmitting}
-                    className="inline-flex items-center gap-2 rounded-md bg-teal-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-teal-hover disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-md bg-teal-accent px-3 sm:px-5 py-2.5 text-xs sm:text-sm font-medium text-white hover:bg-teal-hover disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    Next Question
-                    <ChevronRight className="h-4 w-4" />
+                    <span>Next</span>
+                    <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </button>
                 )}
               </div>

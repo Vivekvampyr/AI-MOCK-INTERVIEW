@@ -210,36 +210,36 @@ export default function Dashboard() {
     .join(" ");
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8] text-[#1A1A1A] py-8 px-4 sm:px-6">
-      <div className="mx-auto max-w-6xl space-y-8">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8] text-[#1A1A1A] py-6 px-3 sm:py-8 sm:px-6">
+      <div className="mx-auto max-w-6xl space-y-6 sm:space-y-8">
         
 
         {terminationMessage && (
           <div
             role="alert"
-            className="rounded-lg border border-red-200 bg-red-50 px-5 py-4"
+            className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 sm:px-5 sm:py-4"
           >
             <h2 className="text-sm font-semibold text-red-800">
               Interview Terminated
             </h2>
 
-            <p className="mt-1 text-sm text-red-700">
+            <p className="mt-1 text-xs sm:text-sm text-red-700">
               {terminationMessage}
             </p>
           </div>
         )}
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#E5E5E0] pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#E5E5E0] pb-5 sm:pb-6">
           <div>
             <span className="text-xs font-medium text-[#0F5C5C] uppercase tracking-wider">
               Candidate Workspace
             </span>
 
-            <h1 className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight text-[#1A1A1A]">
+            <h1 className="mt-1 text-xl sm:text-3xl font-semibold tracking-tight text-[#1A1A1A]">
               Welcome back, {user?.firstName || "Candidate"}
             </h1>
 
-            <p className="mt-1 text-sm text-[#6B6B6B]">
+            <p className="mt-1 text-xs sm:text-sm text-[#6B6B6B]">
               Track your technical interview progress, review feedback
               breakdowns, and run practice sessions.
             </p>
@@ -248,7 +248,7 @@ export default function Dashboard() {
           <button
             type="button"
             onClick={() => setIsSetupOpen(true)}
-            className="inline-flex items-center gap-2 rounded-md bg-[#0F5C5C] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0A4444] shadow-subtle"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md bg-[#0F5C5C] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0A4444] shadow-subtle text-center"
           >
             <Plus className="h-4 w-4" />
             <span>Start New Interview</span>
@@ -256,8 +256,8 @@ export default function Dashboard() {
         </div>
 
         {/* Overview Metric Row */}
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-xl border border-[#E5E5E0] bg-white p-5 shadow-subtle">
+        <div className="grid gap-3 sm:gap-4 sm:grid-cols-3">
+          <div className="rounded-xl border border-[#E5E5E0] bg-white p-4 sm:p-5 shadow-subtle">
             <div className="flex items-center justify-between text-xs text-[#6B6B6B]">
               <span>Completed Sessions</span>
               <CheckCircle2 className="h-4 w-4 text-[#0F5C5C]" />
@@ -482,7 +482,7 @@ export default function Dashboard() {
 
           <div className="overflow-hidden rounded-xl border border-[#E5E5E0] bg-white shadow-subtle">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full min-w-[580px] text-left text-xs">
                 <thead className="border-b border-[#E5E5E0] bg-[#FAFAF8] text-[#6B6B6B]">
                   <tr>
                     <th scope="col" className="px-5 py-3 font-medium">

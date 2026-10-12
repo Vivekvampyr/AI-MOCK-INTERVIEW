@@ -95,8 +95,8 @@ export default function InterviewPermission() {
   );
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8] text-[#1A1A1A] py-10 px-4 sm:px-6">
-      <div className="mx-auto max-w-4xl space-y-8">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-[#FAFAF8] text-[#1A1A1A] py-6 px-3 sm:py-10 sm:px-6">
+      <div className="mx-auto max-w-4xl space-y-6 sm:space-y-8">
         {/* Top Back navigation */}
         <Link
           to="/dashboard"
@@ -107,27 +107,27 @@ export default function InterviewPermission() {
         </Link>
 
         {/* Page Header */}
-        <div className="border-b border-[#E5E5E0] pb-5">
+        <div className="border-b border-[#E5E5E0] pb-4 sm:pb-5">
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-[#0F5C5C] uppercase tracking-wider">
               Step 2 of 3
             </span>
             <span className="text-xs text-[#8C8C88]">·</span>
-            <span className="text-xs text-[#6B6B6B]">
-              {state.setup.experience} Years Seniority · {state.setup.techStack.join(", ")}
+            <span className="text-xs text-[#6B6B6B] truncate">
+              {state.setup.experience} Yrs · {state.setup.techStack.join(", ")}
             </span>
           </div>
-          <h1 className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight text-[#1A1A1A]">
+          <h1 className="mt-1 text-xl sm:text-3xl font-semibold tracking-tight text-[#1A1A1A]">
             Hardware & Audio Verification
           </h1>
-          <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-[#6B6B6B]">
+          <p className="mt-1.5 max-w-2xl text-xs sm:text-sm leading-relaxed text-[#6B6B6B]">
             Confirm your camera and microphone access prior to entering the technical interview.
             This ensures your speech recognition and video feed operate reliably.
           </p>
         </div>
 
         {/* Main Grid */}
-        <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
+        <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
           {/* Camera Frame Preview */}
           <div className="overflow-hidden rounded-xl border border-[#E5E5E0] bg-white shadow-subtle">
             <div className="relative aspect-video w-full bg-[#1A1A1A]">
@@ -176,7 +176,7 @@ export default function InterviewPermission() {
           </div>
 
           {/* Checklist & Permissions Control */}
-          <div className="flex flex-col justify-between rounded-xl border border-[#E5E5E0] bg-white p-6 shadow-subtle">
+          <div className="flex flex-col justify-between rounded-xl border border-[#E5E5E0] bg-white p-4 sm:p-6 shadow-subtle">
             <div>
               <h2 className="text-sm font-semibold text-[#1A1A1A]">
                 Device Checklist
@@ -185,9 +185,9 @@ export default function InterviewPermission() {
                 Verify both devices before proceeding to the questions.
               </p>
 
-              <div className="mt-5 space-y-3">
-                <div className="flex items-center justify-between rounded-lg border border-[#E5E5E0] bg-[#FAFAF8] p-3.5">
-                  <div className="flex items-center gap-3">
+              <div className="mt-4 sm:mt-5 space-y-2.5 sm:space-y-3">
+                <div className="flex items-center justify-between rounded-lg border border-[#E5E5E0] bg-[#FAFAF8] p-3 sm:p-3.5">
+                  <div className="flex items-center gap-2.5 sm:gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-md bg-white border border-[#E5E5E0] text-[#0F5C5C]">
                       <Camera className="h-4 w-4" />
                     </div>
@@ -203,8 +203,8 @@ export default function InterviewPermission() {
                   <StatusBadge ready={cameraLive} />
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg border border-[#E5E5E0] bg-[#FAFAF8] p-3.5">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between rounded-lg border border-[#E5E5E0] bg-[#FAFAF8] p-3 sm:p-3.5">
+                  <div className="flex items-center gap-2.5 sm:gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-md bg-white border border-[#E5E5E0] text-[#0F5C5C]">
                       <Mic className="h-4 w-4" />
                     </div>
@@ -229,11 +229,11 @@ export default function InterviewPermission() {
               )}
             </div>
 
-            <div className="mt-8 space-y-4">
+            <div className="mt-6 sm:mt-8 space-y-3 sm:space-y-4">
               {fullscreenError && (
                 <div
                   role="alert"
-                  className="mt-6 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                  className="mt-4 sm:mt-6 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
                 >
                   {fullscreenError}
                 </div>
@@ -243,7 +243,7 @@ export default function InterviewPermission() {
                   type="button"
                   onClick={startMedia}
                   disabled={isLoading}
-                  className="w-full rounded-md bg-[#0F5C5C] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0A4444] disabled:bg-[#D1D1CB] disabled:text-[#8C8C88]"
+                  className="w-full rounded-md bg-[#0F5C5C] px-4 py-3 sm:py-2.5 text-sm font-medium text-white hover:bg-[#0A4444] disabled:bg-[#D1D1CB] disabled:text-[#8C8C88]"
                 >
                   {isLoading
                     ? "Requesting Device Access..."
@@ -253,7 +253,7 @@ export default function InterviewPermission() {
                 <button
                   type="button"
                   onClick={handleContinue}
-                  className="w-full rounded-md bg-[#0F5C5C] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0A4444]"
+                  className="w-full rounded-md bg-[#0F5C5C] px-4 py-3 sm:py-2.5 text-sm font-medium text-white hover:bg-[#0A4444]"
                 >
                   Continue to Interview
                 </button>

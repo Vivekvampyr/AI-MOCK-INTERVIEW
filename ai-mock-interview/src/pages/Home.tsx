@@ -28,11 +28,11 @@ export default function Home() {
             Practice technical interviews for your target role and get specific feedback on every answer.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
+          <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <Show when="signed-out">
               <Link
                 to="/sign-up"
-                className="inline-flex items-center gap-2 rounded-md bg-[#0F5C5C] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#0A4444] shadow-subtle"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#0F5C5C] px-5 py-3 sm:py-2.5 text-sm font-medium text-white hover:bg-[#0A4444] shadow-subtle text-center"
               >
                 <span>Start a mock interview</span>
                 <ArrowRight className="h-4 w-4" />
@@ -42,7 +42,7 @@ export default function Home() {
             <Show when="signed-in">
               <Link
                 to="/dashboard"
-                className="inline-flex items-center gap-2 rounded-md bg-[#0F5C5C] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#0A4444] shadow-subtle"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#0F5C5C] px-5 py-3 sm:py-2.5 text-sm font-medium text-white hover:bg-[#0A4444] shadow-subtle text-center"
               >
                 <span>Go to candidate dashboard</span>
                 <ArrowRight className="h-4 w-4" />
@@ -51,7 +51,7 @@ export default function Home() {
 
             <a
               href="#how-it-works"
-              className="inline-flex items-center gap-1.5 rounded-md border border-[#E5E5E0] bg-white px-4 py-2.5 text-sm font-medium text-[#1A1A1A] hover:bg-[#F5F5F2]"
+              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-[#E5E5E0] bg-white px-4 py-3 sm:py-2.5 text-sm font-medium text-[#1A1A1A] hover:bg-[#F5F5F2] text-center"
             >
               <span>How it works</span>
               <ChevronRight className="h-3.5 w-3.5 text-[#8C8C88]" />

@@ -84,21 +84,21 @@ export default function InterviewSetupModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 sm:p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="w-full max-w-xl rounded-xl border border-[#E5E5E0] bg-white p-6 shadow-popover">
+      <div className="w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-xl border border-[#E5E5E0] bg-white p-4 sm:p-6 shadow-popover">
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-[#E5E5E0] pb-4">
+        <div className="flex items-start justify-between border-b border-[#E5E5E0] pb-3 sm:pb-4">
           <div>
             <span className="text-xs font-medium text-[#0F5C5C] uppercase tracking-wider">
               Step 1 of 3
             </span>
-            <h2 className="mt-1 text-lg font-semibold tracking-tight text-[#1A1A1A]">
+            <h2 className="mt-1 text-base sm:text-lg font-semibold tracking-tight text-[#1A1A1A]">
               Configure Mock Interview
             </h2>
             <p className="mt-1 text-xs text-[#6B6B6B]">
@@ -117,11 +117,11 @@ export default function InterviewSetupModal({
         </div>
 
         {/* Experience Level */}
-        <div className="mt-5">
+        <div className="mt-4 sm:mt-5">
           <label className="block text-xs font-semibold text-[#1A1A1A]">
             Target Seniority Level
           </label>
-          <div className="mt-2.5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+          <div className="mt-2.5 grid grid-cols-2 gap-2 sm:gap-2.5 sm:grid-cols-4">
             {experienceOptions.map((option) => {
               const selected = experience === option.value;
 
@@ -130,7 +130,7 @@ export default function InterviewSetupModal({
                   key={option.value}
                   type="button"
                   onClick={() => setExperience(option.value)}
-                  className={`rounded-lg border p-3 text-left transition ${
+                  className={`rounded-lg border p-2.5 sm:p-3 text-left transition ${
                     selected
                       ? "border-[#0F5C5C] bg-[#EBF5F5] text-[#0F5C5C]"
                       : "border-[#E5E5E0] bg-[#FAFAF8] text-[#1A1A1A] hover:bg-[#F5F5F2]"
@@ -145,7 +145,7 @@ export default function InterviewSetupModal({
         </div>
 
         {/* Tech Stack */}
-        <div className="mt-6">
+        <div className="mt-5 sm:mt-6">
           <div className="flex items-center justify-between">
             <label className="text-xs font-semibold text-[#1A1A1A]">
               Focus Technologies
@@ -164,15 +164,15 @@ export default function InterviewSetupModal({
                   key={tech}
                   type="button"
                   onClick={() => toggleTechStack(tech)}
-                  className={`flex items-center justify-between rounded-lg border px-3 py-2 text-xs font-medium transition ${
+                  className={`flex items-center justify-between rounded-lg border px-2.5 py-2 sm:px-3 text-xs font-medium transition ${
                     selected
                       ? "border-[#0F5C5C] bg-[#EBF5F5] text-[#0F5C5C]"
                       : "border-[#E5E5E0] bg-[#FAFAF8] text-[#1A1A1A] hover:bg-[#F5F5F2]"
                   }`}
                 >
-                  <span>{tech}</span>
+                  <span className="truncate mr-1">{tech}</span>
                   <div
-                    className={`flex h-4 w-4 items-center justify-center rounded border ${
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
                       selected
                         ? "border-[#0F5C5C] bg-[#0F5C5C] text-white"
                         : "border-[#D1D1CB] bg-white"
@@ -203,12 +203,12 @@ export default function InterviewSetupModal({
         </div>
 
         {/* Footer */}
-        <div className="mt-7 flex items-center justify-end gap-2.5 border-t border-[#E5E5E0] pt-4">
+        <div className="mt-6 sm:mt-7 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-2.5 border-t border-[#E5E5E0] pt-4">
           <button
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="rounded-md border border-[#E5E5E0] bg-white px-3.5 py-2 text-xs font-medium text-[#1A1A1A] hover:bg-[#F5F5F2] disabled:opacity-50"
+            className="w-full sm:w-auto rounded-md border border-[#E5E5E0] bg-white px-3.5 py-2.5 sm:py-2 text-xs font-medium text-[#1A1A1A] hover:bg-[#F5F5F2] disabled:opacity-50 text-center"
           >
             Cancel
           </button>
@@ -217,7 +217,7 @@ export default function InterviewSetupModal({
             type="button"
             onClick={handleContinue}
             disabled={techStack.length === 0 || isLoading}
-            className="inline-flex items-center gap-2 rounded-md bg-[#0F5C5C] px-4 py-2 text-xs font-medium text-white hover:bg-[#0A4444] disabled:bg-[#D1D1CB] disabled:text-[#8C8C88] transition"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-md bg-[#0F5C5C] px-4 py-2.5 sm:py-2 text-xs font-medium text-white hover:bg-[#0A4444] disabled:bg-[#D1D1CB] disabled:text-[#8C8C88] transition text-center"
           >
             {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
             <span>
