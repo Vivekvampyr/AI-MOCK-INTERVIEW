@@ -1066,11 +1066,18 @@ export default function InterviewPage() {
       let finalInterview = completedInterview;
 
       if (recordingBlob) {
-        finalInterview = await uploadInterviewRecording(
-          token,
-          interview.id,
-          recordingBlob
-        );
+        try {
+          finalInterview = await uploadInterviewRecording(
+            token,
+            interview.id,
+            recordingBlob
+          );
+        } catch (uploadError) {
+          console.warn(
+            "Video recording upload failed or timed out, but interview scores were preserved:",
+            uploadError
+          );
+        }
       }
 
       setShowReviewModal(false);

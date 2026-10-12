@@ -433,13 +433,22 @@ class UploadInterviewRecordingView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        interview.recording = recording
-        interview.save(
-            update_fields=[
-                "recording",
-                "updated_at",
-            ]
-        )
+        try:
+            interview.recording = recording
+            interview.save(
+                update_fields=[
+                    "recording",
+                    "updated_at",
+                ]
+            )
+        except Exception as exc:
+            import traceback
+            print("Failed to save interview recording:", repr(exc))
+            traceback.print_exc()
+            return Response(
+                {"error": f"Failed to save recording: {str(exc)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         serializer = InterviewSerializer(
             interview,
