@@ -99,10 +99,12 @@ CSRF_TRUSTED_ORIGINS = [
 
 ROOT_URLCONF = 'config.urls'
 
+FRONTEND_DIST = BASE_DIR.parent / "ai-mock-interview" / "dist"
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [FRONTEND_DIST] if FRONTEND_DIST.exists() else [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -201,8 +203,9 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [FRONTEND_DIST] if FRONTEND_DIST.exists() else []
 
 # Media files & Storage configuration
 MEDIA_URL = "/media/"
