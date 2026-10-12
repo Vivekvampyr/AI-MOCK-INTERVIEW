@@ -7,6 +7,9 @@ if [ -d "../ai-mock-interview" ]; then
     cd ..
 fi
 
+# Ensure Clerk publishable key is available at build time
+export VITE_CLERK_PUBLISHABLE_KEY="${VITE_CLERK_PUBLISHABLE_KEY:-${CLERK_PUBLISHABLE_KEY:-pk_test_c2V0dGxpbmctdGV0cmEtNzk1My5jbGVyay5hY2NvdW50cy5kZXYk}}"
+
 echo "=========================================="
 echo "==> 1/4: Building React Frontend..."
 echo "=========================================="

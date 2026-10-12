@@ -91,8 +91,10 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 CSRF_TRUSTED_ORIGINS = [
     "https://*.vercel.app",
+    "https://*.onrender.com",
     "https://ai-mock-interview-omega-three.vercel.app",
     "https://ai-mock-interview-vampyr1.vercel.app",
+    "https://ai-mock-interview-cs8f.onrender.com",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
@@ -100,11 +102,18 @@ CSRF_TRUSTED_ORIGINS = [
 ROOT_URLCONF = 'config.urls'
 
 FRONTEND_DIST = BASE_DIR.parent / "ai-mock-interview" / "dist"
+STATIC_ROOT_DIR = BASE_DIR / "staticfiles"
+
+template_dirs = []
+if FRONTEND_DIST.exists():
+    template_dirs.append(FRONTEND_DIST)
+if STATIC_ROOT_DIR.exists() and (STATIC_ROOT_DIR / "index.html").exists():
+    template_dirs.append(STATIC_ROOT_DIR)
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [FRONTEND_DIST] if FRONTEND_DIST.exists() else [],
+        'DIRS': template_dirs,
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -155,12 +164,18 @@ CLERK_AUTHORIZED_PARTIES = [
     if value.strip()
 ]
 
-for vercel_domain in [
+for extra_domain in [
     "https://ai-mock-interview-omega-three.vercel.app",
     "https://ai-mock-interview-vampyr1.vercel.app",
+    "https://ai-mock-interview-cs8f.onrender.com",
 ]:
-    if vercel_domain not in CLERK_AUTHORIZED_PARTIES:
-        CLERK_AUTHORIZED_PARTIES.append(vercel_domain)
+    if extra_domain not in CLERK_AUTHORIZED_PARTIES:
+        CLERK_AUTHORIZED_PARTIES.append(extra_domain)
+
+if render_hostname:
+    render_origin = f"https://{render_hostname}"
+    if render_origin not in CLERK_AUTHORIZED_PARTIES:
+        CLERK_AUTHORIZED_PARTIES.append(render_origin)
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [

@@ -44,6 +44,22 @@ class ClerkAuthentication(
             if clean_origin not in authorized_parties:
                 authorized_parties.append(clean_origin)
 
+        host = request.get_host()
+        if host:
+            for scheme in ["https://", "http://"]:
+                host_url = f"{scheme}{host}".rstrip("/")
+                if host_url not in authorized_parties:
+                    authorized_parties.append(host_url)
+
+        referer = request.headers.get("Referer") or request.META.get("HTTP_REFERER")
+        if referer:
+            from urllib.parse import urlparse
+            p = urlparse(referer)
+            if p.netloc:
+                ref_origin = f"{p.scheme}://{p.netloc}".rstrip("/")
+                if ref_origin not in authorized_parties:
+                    authorized_parties.append(ref_origin)
+
         state = authenticate_request(
             request,
             AuthenticateRequestOptions(
