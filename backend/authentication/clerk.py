@@ -37,14 +37,18 @@ class ClerkAuthentication(
     BaseAuthentication
 ):
     def authenticate(self, request):
+        authorized_parties = list(settings.CLERK_AUTHORIZED_PARTIES) if settings.CLERK_AUTHORIZED_PARTIES else []
+        origin = request.headers.get("Origin") or request.META.get("HTTP_ORIGIN")
+        if origin:
+            clean_origin = origin.rstrip("/")
+            if clean_origin not in authorized_parties:
+                authorized_parties.append(clean_origin)
 
         state = authenticate_request(
             request,
             AuthenticateRequestOptions(
                 secret_key=settings.CLERK_SECRET_KEY,
-                authorized_parties=(
-                    settings.CLERK_AUTHORIZED_PARTIES
-                ),
+                authorized_parties=authorized_parties,
                 accepts_token=["session_token"],
             ),
         )

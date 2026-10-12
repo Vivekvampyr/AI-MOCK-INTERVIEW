@@ -73,29 +73,29 @@ CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.getenv(
         "CORS_ALLOWED_ORIGINS",
-        "http://localhost:5173,http://127.0.0.1:5173,https://ai-mock-interview-vampyr1.vercel.app",
+        "http://localhost:5173,http://127.0.0.1:5173,https://ai-mock-interview-omega-three.vercel.app,https://ai-mock-interview-vampyr1.vercel.app",
     ).split(",")
     if origin.strip()
 ]
 
-if "https://ai-mock-interview-vampyr1.vercel.app" not in CORS_ALLOWED_ORIGINS:
-    CORS_ALLOWED_ORIGINS.append("https://ai-mock-interview-vampyr1.vercel.app")
+# Allow any Vercel domain and local dev servers automatically
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https:\/\/.*\.vercel\.app$",
+    r"^http:\/\/localhost:\d+$",
+    r"^http:\/\/127\.0\.0\.1:\d+$",
+]
 
 # Allow credentials and secure reverse proxy behind Render
 CORS_ALLOW_CREDENTIALS = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 CSRF_TRUSTED_ORIGINS = [
-    origin.strip()
-    for origin in os.getenv(
-        "CSRF_TRUSTED_ORIGINS",
-        "http://localhost:5173,http://127.0.0.1:5173,https://ai-mock-interview-vampyr1.vercel.app",
-    ).split(",")
-    if origin.strip()
+    "https://*.vercel.app",
+    "https://ai-mock-interview-omega-three.vercel.app",
+    "https://ai-mock-interview-vampyr1.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
-
-if "https://ai-mock-interview-vampyr1.vercel.app" not in CSRF_TRUSTED_ORIGINS:
-    CSRF_TRUSTED_ORIGINS.append("https://ai-mock-interview-vampyr1.vercel.app")
 
 ROOT_URLCONF = 'config.urls'
 
@@ -148,13 +148,17 @@ CLERK_AUTHORIZED_PARTIES = [
     value.strip()
     for value in os.getenv(
         "CLERK_AUTHORIZED_PARTIES",
-        "http://localhost:5173,http://127.0.0.1:5173,https://ai-mock-interview-vampyr1.vercel.app",
+        "http://localhost:5173,http://127.0.0.1:5173,https://ai-mock-interview-omega-three.vercel.app,https://ai-mock-interview-vampyr1.vercel.app",
     ).split(",")
     if value.strip()
 ]
 
-if "https://ai-mock-interview-vampyr1.vercel.app" not in CLERK_AUTHORIZED_PARTIES:
-    CLERK_AUTHORIZED_PARTIES.append("https://ai-mock-interview-vampyr1.vercel.app")
+for vercel_domain in [
+    "https://ai-mock-interview-omega-three.vercel.app",
+    "https://ai-mock-interview-vampyr1.vercel.app",
+]:
+    if vercel_domain not in CLERK_AUTHORIZED_PARTIES:
+        CLERK_AUTHORIZED_PARTIES.append(vercel_domain)
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
