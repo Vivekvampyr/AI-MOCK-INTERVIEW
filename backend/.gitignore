@@ -2,4 +2,7 @@
 .env
 __pycache__/
 *.pyc
-*media/
+media/
+staticfiles/
+*.sqlite3
+.DS_Store

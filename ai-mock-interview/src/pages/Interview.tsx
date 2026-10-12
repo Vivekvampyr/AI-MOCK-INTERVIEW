@@ -558,163 +558,119 @@ export default function InterviewPage() {
   
 
   useEffect(() => {
-
     if (!stream) return;
 
     let animationFrameId = 0;
-
     let isActive = true;
+    let isDetecting = false;
+    let lastDetectionTime = 0;
 
     const detect = async () => {
-
       if (!isActive) return;
 
-      const video = videoRef.current;
+      const now = Date.now();
+      if (isDetecting || now - lastDetectionTime < 600) {
+        animationFrameId = requestAnimationFrame(detect);
+        return;
+      }
 
+      const video = videoRef.current;
       if (video) {
+        isDetecting = true;
+        lastDetectionTime = now;
 
         try {
-
           const moved = await detectEyeMovement(video);
 
           if (moved) {
-
             eyeMovementCountRef.current += 1;
-
           } else {
-
             eyeMovementCountRef.current = 0;
-
           }
 
-          const now = Date.now();
-
-          const sustainedMovement =
-
-            eyeMovementCountRef.current >= 3;
-
-          const cooldownPassed =
-
-            now - lastEyeWarningRef.current >= 10000;
+          const currentTime = Date.now();
+          const sustainedMovement = eyeMovementCountRef.current >= 3;
+          const cooldownPassed = currentTime - lastEyeWarningRef.current >= 10000;
 
           if (sustainedMovement && cooldownPassed) {
-
-            lastEyeWarningRef.current = now;
-
+            lastEyeWarningRef.current = currentTime;
             eyeMovementCountRef.current = 0;
-
             await recordWarning("eye_movement");
-
           }
-
         } catch (error) {
-
-          console.error(
-
-            "Eye movement detection error:",
-
-            error
-
-          );
-
+          console.error("Eye movement detection error:", error);
+        } finally {
+          isDetecting = false;
         }
-
       }
 
       animationFrameId = requestAnimationFrame(detect);
-
     };
 
     detect();
 
     return () => {
-
       isActive = false;
-
       cancelAnimationFrame(animationFrameId);
-
     };
-
   }, [stream, recordWarning]);
 
   useEffect(() => {
-
     if (!stream) return;
 
     let animationFrameId = 0;
-
     let isActive = true;
+    let isDetecting = false;
+    let lastDetectionTime = 0;
 
     const detect = async () => {
-
       if (!isActive) return;
 
-      const video = videoRef.current;
+      const now = Date.now();
+      if (isDetecting || now - lastDetectionTime < 600) {
+        animationFrameId = requestAnimationFrame(detect);
+        return;
+      }
 
+      const video = videoRef.current;
       if (video) {
+        isDetecting = true;
+        lastDetectionTime = now;
 
         try {
-
           const moved = await detectLipMovement(video);
 
           if (moved) {
-
             lipMovementCountRef.current += 1;
-
           } else {
-
             lipMovementCountRef.current = 0;
-
           }
 
-          const now = Date.now();
-
-          const sustainedMovement =
-
-            lipMovementCountRef.current >= 3;
-
-          const cooldownPassed =
-
-            now - lastLipWarningRef.current >= 10000;
+          const currentTime = Date.now();
+          const sustainedMovement = lipMovementCountRef.current >= 3;
+          const cooldownPassed = currentTime - lastLipWarningRef.current >= 10000;
 
           if (sustainedMovement && cooldownPassed) {
-
-            lastLipWarningRef.current = now;
-
+            lastLipWarningRef.current = currentTime;
             lipMovementCountRef.current = 0;
-
             await recordWarning("lip_movement");
-
           }
-
         } catch (error) {
-
-          console.error(
-
-            "Lip movement detection error:",
-
-            error
-
-          );
-
+          console.error("Lip movement detection error:", error);
+        } finally {
+          isDetecting = false;
         }
-
       }
 
       animationFrameId = requestAnimationFrame(detect);
-
     };
 
     detect();
 
     return () => {
-
       isActive = false;
-
       cancelAnimationFrame(animationFrameId);
-
     };
-
   }, [stream, recordWarning]);
 
   useEffect(() => {

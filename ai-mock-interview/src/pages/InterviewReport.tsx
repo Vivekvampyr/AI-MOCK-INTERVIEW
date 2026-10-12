@@ -10,6 +10,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import type { Interview } from "../types/api";
+import { API_HOST } from "../services/api";
 
 interface LocationState {
   interview?: Interview;
@@ -301,7 +302,7 @@ export default function InterviewReport() {
                 src={
                   interview.recording.startsWith("http")
                     ? interview.recording
-                    : `http://127.0.0.1:8000${interview.recording}`
+                    : `${API_HOST}${interview.recording}`
                 }
               />
             </div>
@@ -371,7 +372,7 @@ export default function InterviewReport() {
                   const screenshotUrl = warning.screenshot
                     ? warning.screenshot.startsWith("http")
                       ? warning.screenshot
-                      : `http://127.0.0.1:8000${warning.screenshot}`
+                      : `${API_HOST}${warning.screenshot}`
                     : null;
 
                   return (

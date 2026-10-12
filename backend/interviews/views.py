@@ -100,6 +100,15 @@ class StartInterviewView(APIView):
             print("================================\n")
 
             interview.status = "failed"
+            interview.save(update_fields=["status", "updated_at"])
+
+            return Response(
+                {
+                    "error": "Failed to generate interview questions. Please try again.",
+                    "details": str(error),
+                },
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
 
         serializer = InterviewSerializer(
             interview,
@@ -309,14 +318,19 @@ class TerminateInterviewView(APIView):
 
 class InterviewListView(APIView):
     def get(self, request):
-        interviews = Interview.objects.filter(
-            clerk_user_id=request.user.id,
-            status="completed",
-        ).order_by("-created_at")
+        interviews = (
+            Interview.objects.filter(
+                clerk_user_id=request.user.id,
+                status="completed",
+            )
+            .prefetch_related("questions", "warnings")
+            .order_by("-created_at")
+        )
 
         serializer = InterviewSerializer(
             interviews,
-            many=True
+            many=True,
+            context={"request": request},
         )
 
         return Response(
