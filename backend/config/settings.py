@@ -27,10 +27,17 @@ ALLOWED_HOSTS = [
     host.strip()
     for host in os.getenv(
         "ALLOWED_HOSTS",
-        "localhost,127.0.0.1",
+        "localhost,127.0.0.1,.onrender.com",
     ).split(",")
     if host.strip()
 ]
+
+render_hostname = os.getenv("RENDER_EXTERNAL_HOSTNAME")
+if render_hostname and render_hostname not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(render_hostname)
+
+if ".onrender.com" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(".onrender.com")
 
 
 # Application definition
@@ -66,10 +73,13 @@ CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.getenv(
         "CORS_ALLOWED_ORIGINS",
-        "http://localhost:5173,http://127.0.0.1:5173",
+        "http://localhost:5173,http://127.0.0.1:5173,https://ai-mock-interview-vampyr1.vercel.app",
     ).split(",")
     if origin.strip()
 ]
+
+if "https://ai-mock-interview-vampyr1.vercel.app" not in CORS_ALLOWED_ORIGINS:
+    CORS_ALLOWED_ORIGINS.append("https://ai-mock-interview-vampyr1.vercel.app")
 
 # Allow credentials and secure reverse proxy behind Render
 CORS_ALLOW_CREDENTIALS = True
@@ -79,10 +89,13 @@ CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.getenv(
         "CSRF_TRUSTED_ORIGINS",
-        "http://localhost:5173,http://127.0.0.1:5173",
+        "http://localhost:5173,http://127.0.0.1:5173,https://ai-mock-interview-vampyr1.vercel.app",
     ).split(",")
     if origin.strip()
 ]
+
+if "https://ai-mock-interview-vampyr1.vercel.app" not in CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS.append("https://ai-mock-interview-vampyr1.vercel.app")
 
 ROOT_URLCONF = 'config.urls'
 
@@ -135,10 +148,13 @@ CLERK_AUTHORIZED_PARTIES = [
     value.strip()
     for value in os.getenv(
         "CLERK_AUTHORIZED_PARTIES",
-        "http://localhost:5173,http://127.0.0.1:5173",
+        "http://localhost:5173,http://127.0.0.1:5173,https://ai-mock-interview-vampyr1.vercel.app",
     ).split(",")
     if value.strip()
 ]
+
+if "https://ai-mock-interview-vampyr1.vercel.app" not in CLERK_AUTHORIZED_PARTIES:
+    CLERK_AUTHORIZED_PARTIES.append("https://ai-mock-interview-vampyr1.vercel.app")
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -200,6 +216,12 @@ if SUPABASE_STORAGE_BUCKET:
     AWS_S3_REGION_NAME = os.getenv("SUPABASE_REGION", "us-east-1")
     AWS_DEFAULT_ACL = None
     AWS_QUERYSTRING_AUTH = False
+
+    supabase_project_ref = os.getenv("SUPABASE_PROJECT_REF")
+    if supabase_project_ref:
+        AWS_S3_CUSTOM_DOMAIN = f"{supabase_project_ref}.supabase.co/storage/v1/object/public/{SUPABASE_STORAGE_BUCKET}"
+    elif os.getenv("AWS_S3_CUSTOM_DOMAIN"):
+        AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN")
 
     STORAGES = {
         "default": {
